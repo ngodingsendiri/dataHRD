@@ -11,9 +11,17 @@ interface EmployeeFormProps {
 export function EmployeeForm({ initialData, onSubmit, onCancel }: EmployeeFormProps) {
   const { register, control, handleSubmit, formState: { errors } } = useForm<Employee>({
     defaultValues: initialData || {
-      nik: '', nama: '', nip: '', pangkatGolongan: '', jabatan: '', bidang: '',
-      status: 'PNS', tmtKerja: '', masaKerja: '', pendidikan: '', agama: '',
-      alamatLengkap: '', nomorHp: '', dataKeluarga: [], atasanLangsung: '', pejabatWewenang: ''
+      nik: '', nama: '', nip: '', jk: 'L', tempatLahir: '', tanggalLahir: '',
+      jalanDusun: '', rt: '', rw: '', desaKelurahan: '', kecamatan: '', kabupaten: '',
+      kelasJabatan: '', bebanKerja: '', tmtKerja: '', masaKerja: '', pensiun: '',
+      tmtGolonganRuang: '', pangkat: '', gol: '', pangkatGolongan: '',
+      tanggalBerkalaTerakhir: '', gajiPokok: '', besaranGajiKotor: '',
+      jabatan: '', bidang: '', status: 'PNS', nomorKarpeg: '',
+      pendidikan: '', jurusan: '', diklatJenjang: '', tahunDiklat: '',
+      statusKawin: '', agama: '', nomorHp: '',
+      sisaCutiN: '', sisaCutiN1: '', sisaCutiN2: '',
+      atasanLangsung: '', nipAtasanLangsung: '', pejabatWewenang: '', nipPejabatWewenang: '',
+      skTerakhir: '', jumlahTertanggung: 0, dataKeluarga: []
     }
   });
 
@@ -23,84 +31,227 @@ export function EmployeeForm({ initialData, onSubmit, onCancel }: EmployeeFormPr
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Basic Info */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">NIK</label>
-          <input {...register('nik', { required: true })} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Nama Lengkap</label>
-          <input {...register('nama', { required: true })} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">NIP</label>
-          <input {...register('nip')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Status Pegawai</label>
-          <select {...register('status')} className="w-full p-2 border rounded-md">
-            <option value="PNS">PNS</option>
-            <option value="PPPK">PPPK</option>
-            <option value="Honorer">Honorer</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Pangkat/Golongan</label>
-          <input {...register('pangkatGolongan')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Jabatan</label>
-          <input {...register('jabatan')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Bidang</label>
-          <input {...register('bidang')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">TMT Kerja</label>
-          <input type="date" {...register('tmtKerja')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Masa Kerja</label>
-          <input {...register('masaKerja')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Pendidikan Terakhir</label>
-          <input {...register('pendidikan')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Agama</label>
-          <input {...register('agama')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Nomor HP</label>
-          <input {...register('nomorHp')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-medium">Alamat Lengkap</label>
-          <textarea {...register('alamatLengkap')} className="w-full p-2 border rounded-md" rows={3} />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Atasan Langsung</label>
-          <input {...register('atasanLangsung')} className="w-full p-2 border rounded-md" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Pejabat Wewenang</label>
-          <input {...register('pejabatWewenang')} className="w-full p-2 border rounded-md" />
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      {/* Section 1: Identitas Pribadi */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Identitas Pribadi</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">NIP</label>
+            <input {...register('nip')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">NIK *</label>
+            <input {...register('nik', { required: true })} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Nama Lengkap *</label>
+            <input {...register('nama', { required: true })} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Jenis Kelamin</label>
+            <select {...register('jk')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all">
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Tempat Lahir</label>
+            <input {...register('tempatLahir')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Tanggal Lahir</label>
+            <input {...register('tanggalLahir')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Agama</label>
+            <input {...register('agama')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Status Kawin</label>
+            <input {...register('statusKawin')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Nomor HP</label>
+            <input {...register('nomorHp')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
         </div>
       </div>
 
-      {/* Family Data */}
-      <div className="border-t pt-4">
+      {/* Section 2: Alamat */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Alamat Domisili</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-sm font-medium text-slate-700">Jalan / Dusun</label>
+            <input {...register('jalanDusun')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700">RT</label>
+              <input {...register('rt')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700">RW</label>
+              <input {...register('rw')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Desa / Kelurahan</label>
+            <input {...register('desaKelurahan')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Kecamatan</label>
+            <input {...register('kecamatan')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Kabupaten</label>
+            <input {...register('kabupaten')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+        </div>
+      </div>
+
+      {/* Section 3: Kepegawaian */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Data Kepegawaian</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Status Pegawai</label>
+            <select {...register('status')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all">
+              <option value="PNS">PNS</option>
+              <option value="PPPK">PPPK</option>
+              <option value="Honorer">Honorer</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Jabatan</label>
+            <input {...register('jabatan')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Bidang</label>
+            <input {...register('bidang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Pangkat</label>
+            <input {...register('pangkat')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Golongan</label>
+            <input {...register('gol')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">TMT Golongan</label>
+            <input {...register('tmtGolonganRuang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">TMT Kerja</label>
+            <input {...register('tmtKerja')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Masa Kerja</label>
+            <input {...register('masaKerja')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Pensiun</label>
+            <input {...register('pensiun')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Gaji Pokok</label>
+            <input {...register('gajiPokok')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Besaran Gaji Kotor</label>
+            <input {...register('besaranGajiKotor')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Nomor Karpeg</label>
+            <input {...register('nomorKarpeg')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+        </div>
+      </div>
+
+      {/* Section 4: Pendidikan & Diklat */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Pendidikan & Diklat</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Pendidikan Terakhir</label>
+            <input {...register('pendidikan')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Jurusan</label>
+            <input {...register('jurusan')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Diklat Jenjang</label>
+            <input {...register('diklatJenjang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Tahun Diklat</label>
+            <input {...register('tahunDiklat')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+        </div>
+      </div>
+
+      {/* Section 5: Atasan & Pejabat */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Atasan & Pejabat Berwenang</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Atasan Langsung</label>
+            <input {...register('atasanLangsung')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">NIP Atasan Langsung</label>
+            <input {...register('nipAtasanLangsung')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Pejabat Wewenang</label>
+            <input {...register('pejabatWewenang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">NIP Pejabat Wewenang</label>
+            <input {...register('nipPejabatWewenang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+        </div>
+      </div>
+
+      {/* Section 6: Lain-lain */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Informasi Tambahan</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Sisa Cuti N</label>
+            <input {...register('sisaCutiN')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Sisa Cuti N-1</label>
+            <input {...register('sisaCutiN1')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Sisa Cuti N-2</label>
+            <input {...register('sisaCutiN2')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-sm font-medium text-slate-700">SK Terakhir</label>
+            <input {...register('skTerakhir')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Jumlah Tertanggung</label>
+            <input type="number" {...register('jumlahTertanggung')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+        </div>
+      </div>
+
+      {/* Section 7: Data Keluarga */}
+      <div className="border-t border-slate-100 pt-6 mt-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Data Keluarga</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Data Keluarga</h3>
           <button
             type="button"
-            onClick={() => append({ name: '', relation: 'Istri', birthDate: '', occupation: '' })}
-            className="flex items-center text-sm text-blue-600 hover:text-blue-700"
+            onClick={() => append({ name: '', relation: 'Istri', birthDate: '', marriageDate: '', occupation: '', description: '' })}
+            className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
           >
             <Plus className="w-4 h-4 mr-1" /> Tambah Anggota
           </button>
@@ -108,57 +259,88 @@ export function EmployeeForm({ initialData, onSubmit, onCancel }: EmployeeFormPr
         
         <div className="space-y-4">
           {fields.map((field, index) => (
-            <div key={field.id} className="flex gap-4 items-start p-4 border rounded-lg bg-gray-50">
-              <div className="grid grid-cols-2 gap-4 flex-1">
-                <input
-                  {...register(`dataKeluarga.${index}.name` as const, { required: true })}
-                  placeholder="Nama"
-                  className="p-2 border rounded-md"
-                />
-                <select
-                  {...register(`dataKeluarga.${index}.relation` as const)}
-                  className="p-2 border rounded-md"
+            <div key={field.id} className="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 space-y-4">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Anggota #{index + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                 >
-                  <option value="Istri">Istri</option>
-                  <option value="Suami">Suami</option>
-                  <option value="Anak">Anak</option>
-                </select>
-                <input
-                  type="date"
-                  {...register(`dataKeluarga.${index}.birthDate` as const)}
-                  className="p-2 border rounded-md"
-                />
-                <input
-                  {...register(`dataKeluarga.${index}.occupation` as const)}
-                  placeholder="Pekerjaan"
-                  className="p-2 border rounded-md"
-                />
+                  <Trash2 className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => remove(index)}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-md"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Nama</label>
+                  <input
+                    {...register(`dataKeluarga.${index}.name` as const, { required: true })}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Hubungan</label>
+                  <select
+                    {...register(`dataKeluarga.${index}.relation` as const)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  >
+                    <option value="Istri">Istri</option>
+                    <option value="Suami">Suami</option>
+                    <option value="Anak">Anak</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Tanggal Lahir</label>
+                  <input
+                    {...register(`dataKeluarga.${index}.birthDate` as const)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Tanggal Perkawinan (Jika Ada)</label>
+                  <input
+                    {...register(`dataKeluarga.${index}.marriageDate` as const)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Pekerjaan</label>
+                  <input
+                    {...register(`dataKeluarga.${index}.occupation` as const)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Keterangan</label>
+                  <input
+                    {...register(`dataKeluarga.${index}.description` as const)}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  />
+                </div>
+              </div>
             </div>
           ))}
+          {fields.length === 0 && (
+            <div className="text-center py-8 border-2 border-dashed border-slate-100 rounded-2xl text-sm text-slate-400">
+              Belum ada data keluarga yang ditambahkan.
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t">
+      <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          className="px-6 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all shadow-sm"
         >
           Batal
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+          className="px-6 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all shadow-sm"
         >
-          Simpan
+          Simpan Data Pegawai
         </button>
       </div>
     </form>

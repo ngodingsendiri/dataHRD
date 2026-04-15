@@ -10,11 +10,14 @@ interface State {
   error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null
-  };
+export class ErrorBoundary extends React.Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    (this as any).state = {
+      hasError: false,
+      error: null
+    };
+  }
 
   public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
@@ -25,13 +28,14 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public render() {
-    if (this.state.hasError) {
+    const state = (this as any).state;
+    if (state.hasError) {
       let errorMessage = "Terjadi kesalahan yang tidak terduga.";
       let isPermissionError = false;
 
       try {
-        if (this.state.error?.message) {
-          const parsedError = JSON.parse(this.state.error.message);
+        if (state.error?.message) {
+          const parsedError = JSON.parse(state.error.message);
           if (parsedError.error && parsedError.error.includes('permission-denied')) {
             isPermissionError = true;
             errorMessage = "Anda tidak memiliki izin untuk mengakses data ini. Silakan periksa aturan (rules) Firestore di Firebase Console Anda.";
@@ -41,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
         }
       } catch (e) {
         // Not a JSON error string, use default message or error message
-        errorMessage = this.state.error?.message || errorMessage;
+        errorMessage = state.error?.message || errorMessage;
       }
 
       return (
@@ -75,6 +79,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return (this as any).props.children;
   }
 }
