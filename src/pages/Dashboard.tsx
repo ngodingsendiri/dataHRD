@@ -55,27 +55,27 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-10 max-w-7xl mx-auto pb-12">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-500">Ringkasan data kepegawaian terkini.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Dashboard</h1>
+        <p className="mt-2 text-sm text-slate-500 font-medium">Ringkasan data kepegawaian terkini secara real-time.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((item) => (
-          <div key={item.name} className="bg-white overflow-hidden rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
-            <div className="p-6">
+          <div key={item.name} className="bg-white overflow-hidden rounded-[32px] border border-slate-200/60 shadow-sm transition-all hover:shadow-xl hover:shadow-slate-200/50 group">
+            <div className="p-8">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className={`rounded-xl p-3 ring-1 ring-inset ${item.color}`}>
-                    <item.icon className="h-6 w-6" aria-hidden="true" />
+                  <div className={`rounded-2xl p-4 transition-all group-hover:scale-110 ${item.color.replace('ring-1 ring-inset', '')} shadow-sm`}>
+                    <item.icon className="h-7 w-7" aria-hidden="true" />
                   </div>
                 </div>
-                <div className="ml-5 w-0 flex-1">
+                <div className="ml-6 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-slate-500 truncate">{item.name}</dt>
+                    <dt className="text-xs font-black text-slate-400 uppercase tracking-widest truncate">{item.name}</dt>
                     <dd>
-                      <div className="text-3xl font-bold tracking-tight text-slate-900 mt-1">{item.value}</div>
+                      <div className="text-4xl font-black tracking-tighter text-slate-900 mt-2">{item.value}</div>
                     </dd>
                   </dl>
                 </div>

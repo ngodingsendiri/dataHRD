@@ -538,29 +538,29 @@ export default function Employees() {
   });
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Master Data Pegawai</h1>
-          <p className="mt-1 text-sm text-slate-500">Kelola data seluruh pegawai.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Master Data Pegawai</h1>
+          <p className="mt-2 text-sm text-slate-500 font-medium">Kelola informasi dan data kepegawaian secara terpusat dan efisien.</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <button 
             onClick={handleDownloadTemplate}
-            className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 shadow-sm transition-all"
+            className="inline-flex items-center px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
           >
-            <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-600" />
-            Download Template
+            <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-500" />
+            Template
           </button>
           
-          <label className={`cursor-pointer inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-xl shadow-sm transition-all border
-            ${isAIProcessing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'text-slate-700 bg-white border-slate-200 hover:bg-slate-50'}`}>
+          <label className={`cursor-pointer inline-flex items-center px-5 py-2.5 text-sm font-bold rounded-2xl shadow-sm transition-all border active:scale-95
+            ${isAIProcessing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'text-indigo-600 bg-white border-indigo-100 hover:bg-indigo-50/50'}`}>
             {isAIProcessing ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <Sparkles className="w-4 h-4 mr-2 text-indigo-600" />
+              <Sparkles className="w-4 h-4 mr-2 text-indigo-500" />
             )}
-            AI Smart Scan
+            Smart Scan
             <input 
               type="file" 
               accept="image/*, .pdf, .xlsx, .xls" 
@@ -571,48 +571,42 @@ export default function Employees() {
             />
           </label>
 
-          <label className="cursor-pointer inline-flex items-center px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 shadow-sm transition-all">
-            <Upload className="w-4 h-4 mr-2" />
-            Import Excel
+          <label className="cursor-pointer inline-flex items-center px-5 py-2.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all active:scale-95">
+            <Upload className="w-4 h-4 mr-2 text-slate-400" />
+            Import
             <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImport} />
           </label>
-          <button 
-            onClick={handleExport}
-            className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 shadow-sm transition-all"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export Excel
-          </button>
+          
           <button 
             onClick={() => { setEditingEmployee(undefined); setIsModalOpen(true); }}
-            className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-xl hover:bg-slate-800 shadow-sm transition-all"
+            className="inline-flex items-center px-6 py-2.5 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 shadow-lg shadow-slate-200 transition-all active:scale-95"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Tambah Pegawai
+            Tambah
           </button>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-2xl border border-slate-200 overflow-hidden">
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white shadow-sm rounded-[32px] border border-slate-200/60 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="relative max-w-md flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-400" />
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 sm:text-sm transition-all"
-              placeholder="Cari berdasarkan Nama, NIP, atau NIK..."
+              className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-2xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 sm:text-sm transition-all shadow-sm"
+              placeholder="Cari Nama, NIP, atau NIK..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-slate-500">Tampilkan:</span>
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tampilkan</span>
             <select 
               value={rowsPerPage}
               onChange={(e) => setRowsPerPage(Number(e.target.value))}
-              className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+              className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-4 focus:ring-indigo-50 transition-all cursor-pointer shadow-sm"
             >
               <option value={10}>10 Baris</option>
               <option value={25}>25 Baris</option>
@@ -623,29 +617,29 @@ export default function Employees() {
         </div>
         
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
+          <table className="min-w-full divide-y divide-slate-100">
             <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-3 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-10">No.</th>
-                <th className="px-3 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-24">Aksi</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Pegawai</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identitas</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jabatan & Unit</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pangkat / Pend.</th>
-                <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+              <tr className="bg-slate-50/30">
+                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16">No.</th>
+                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-28">Aksi</th>
+                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Pegawai</th>
+                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identitas</th>
+                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jabatan & Unit</th>
+                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pangkat / Pend.</th>
+                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-50">
               {filteredEmployees.slice(0, rowsPerPage).map((emp, index) => (
-                <tr key={emp.id} className="group hover:bg-indigo-50/30 transition-all duration-150">
-                  <td className="px-3 py-2.5 whitespace-nowrap text-[11px] font-semibold text-slate-400">
-                    {index + 1}
+                <tr key={emp.id} className="group hover:bg-slate-50/80 transition-all duration-200">
+                  <td className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-300">
+                    {String(index + 1).padStart(2, '0')}
                   </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    <div className="flex items-center gap-0.5">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5">
                       <button 
                         onClick={() => { setEditingEmployee(emp); setIsModalOpen(true); }}
-                        className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-md border border-transparent hover:border-indigo-100 transition-all"
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
                         title="Edit"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -654,50 +648,45 @@ export default function Employees() {
                         onClick={() => {
                           alert(`Arsip data ${emp.nama}`);
                         }}
-                        className="p-1 text-slate-400 hover:text-amber-600 hover:bg-white rounded-md border border-transparent hover:border-amber-100 transition-all"
+                        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
                         title="Arsip"
                       >
                         <Download className="w-3.5 h-3.5" />
                       </button>
                       <button 
                         onClick={() => handleDeleteClick(emp.id!)}
-                        className="p-1 text-slate-400 hover:text-red-600 hover:bg-white rounded-md border border-transparent hover:border-red-100 transition-all"
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                         title="Hapus"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 whitespace-nowrap">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-[10px] border border-indigo-100/50 shrink-0">
-                        {emp.nama ? emp.nama.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'}
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors leading-none">{emp.nama || '-'}</div>
-                        <div className="text-[10px] font-medium text-slate-400 mt-1 tracking-tight">NIP: {emp.nip || '-'}</div>
-                      </div>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors leading-none">{emp.nama || '-'}</div>
+                      <div className="text-[10px] font-medium text-slate-400 mt-1.5 tracking-tight">NIP: {emp.nip || '-'}</div>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-[12px] text-slate-600 font-bold tracking-tight">{emp.nik || '-'}</div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className={`text-[9px] px-1 py-0 rounded-sm font-black uppercase border ${emp.jk === 'L' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-pink-50 text-pink-600 border-pink-100'}`}>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase border ${emp.jk === 'L' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-pink-50 text-pink-600 border-pink-100'}`}>
                         {emp.jk === 'L' ? 'Laki-laki' : emp.jk === 'P' ? 'Perempuan' : '-'}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-medium">{emp.nomorHp || '-'}</span>
+                      <span className="text-[10px] text-slate-400 font-bold">{emp.nomorHp || '-'}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 whitespace-nowrap">
-                    <div className="text-[12px] text-slate-800 font-bold max-w-[180px] truncate" title={emp.jabatan}>{emp.jabatan || '-'}</div>
-                    <div className="text-[10px] text-indigo-500 mt-0.5 font-bold uppercase tracking-tighter">{emp.bidang || '-'}</div>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-[12px] text-slate-800 font-bold max-w-[200px] truncate" title={emp.jabatan}>{emp.jabatan || '-'}</div>
+                    <div className="text-[10px] text-indigo-500 mt-1 font-black uppercase tracking-widest">{emp.bidang || '-'}</div>
                   </td>
-                  <td className="px-4 py-2.5 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-[12px] text-slate-700 font-bold">{emp.pangkatGolongan || '-'}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5 italic font-medium">{emp.pendidikan || '-'}</div>
+                    <div className="text-[10px] text-slate-400 mt-1 italic font-medium">{emp.pendidikan || '-'}</div>
                   </td>
-                  <td className="px-4 py-2.5 whitespace-nowrap">
-                    <span className={`px-2 py-0.5 inline-flex text-[9px] font-black uppercase tracking-tighter rounded border
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`px-2.5 py-1 inline-flex text-[9px] font-black uppercase tracking-widest rounded-lg border
                       ${emp.status === 'PNS' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
                         emp.status === 'PPPK' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 
                         emp.status === 'Honorer' ? 'bg-amber-50 text-amber-700 border-amber-100' :
