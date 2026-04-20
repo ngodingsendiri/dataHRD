@@ -35,7 +35,7 @@ export interface Employee {
   besaranGajiKotor: string;
   jabatan: string;
   bidang: string;
-  status: 'PNS' | 'PPPK' | 'Honorer' | 'Lainnya';
+  status: 'PNS' | 'CPNS' | 'PPPK' | 'PPPKPW' | 'Lainnya';
   nomorKarpeg: string;
   pendidikan: string;
   jurusan: string;
@@ -47,13 +47,20 @@ export interface Employee {
   sisaCutiN: string;
   sisaCutiN1: string;
   sisaCutiN2: string;
-  atasanLangsung: string;
-  nipAtasanLangsung: string;
-  pejabatWewenang: string;
-  nipPejabatWewenang: string;
   skTerakhir: string;
   jumlahTertanggung: number;
   dataKeluarga: FamilyMember[];
   createdAt?: number;
   updatedAt?: number;
+}
+
+export interface AppSettings {
+  sekdaNama: string;
+  sekdaNip: string;
+  bupatiNama: string;
+  kopLine1?: string;
+  kopLine2?: string;
+  kopLine3?: string;
+  kopLine4?: string;
+  logoBase64?: string;
 }

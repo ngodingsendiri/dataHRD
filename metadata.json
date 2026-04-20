@@ -1,6 +1,6 @@
 {
-  "name": "dataHRD",
-  "description": "Master Data Pegawai (HRD)",
+  "name": "HRCube",
+  "description": "Sistem Informasi Kepegawaian (HRD) Modern & Terintegrasi",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

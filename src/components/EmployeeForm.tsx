@@ -20,7 +20,6 @@ export function EmployeeForm({ initialData, onSubmit, onCancel }: EmployeeFormPr
       pendidikan: '', jurusan: '', diklatJenjang: '', tahunDiklat: '',
       statusKawin: '', agama: '', nomorHp: '',
       sisaCutiN: '', sisaCutiN1: '', sisaCutiN2: '',
-      atasanLangsung: '', nipAtasanLangsung: '', pejabatWewenang: '', nipPejabatWewenang: '',
       skTerakhir: '', jumlahTertanggung: 0, dataKeluarga: []
     }
   });
@@ -190,29 +189,6 @@ export function EmployeeForm({ initialData, onSubmit, onCancel }: EmployeeFormPr
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Tahun Diklat</label>
             <input {...register('tahunDiklat')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
-          </div>
-        </div>
-      </div>
-
-      {/* Section 5: Atasan & Pejabat */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Atasan & Pejabat Berwenang</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Atasan Langsung</label>
-            <input {...register('atasanLangsung')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">NIP Atasan Langsung</label>
-            <input {...register('nipAtasanLangsung')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Pejabat Wewenang</label>
-            <input {...register('pejabatWewenang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">NIP Pejabat Wewenang</label>
-            <input {...register('nipPejabatWewenang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
           </div>
         </div>
       </div>

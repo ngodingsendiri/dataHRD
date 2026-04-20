@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
+import Settings from './pages/Settings';
+import Print from './pages/Print';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useEffect, useState } from 'react';
 import { auth } from './lib/firebase';
@@ -73,6 +75,9 @@ export default function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="employees" element={<Employees />} />
+            <Route path="print" element={<Print />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="chat" element={<div>Halaman Chat (Segera Hadir)</div>} />
           </Route>
         </Routes>
       </BrowserRouter>

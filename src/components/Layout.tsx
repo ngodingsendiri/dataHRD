@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Menu, X, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, Menu, X, LogOut, ChevronLeft, ChevronRight, Settings, Printer, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { auth } from '../lib/firebase';
@@ -13,114 +13,144 @@ export default function Layout() {
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Master Data Pegawai', href: '/employees', icon: Users },
+    { name: 'Cetak', href: '/print', icon: Printer },
+    { name: 'Pengaturan', href: '/settings', icon: Settings },
+    { name: 'Chat', href: '/chat', icon: MessageSquare },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="h-screen w-full bg-white flex overflow-hidden font-sans antialiased text-slate-900 print:h-auto print:overflow-visible">
       {/* Mobile sidebar backdrop */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 z-20 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-900/10 backdrop-blur-[2px] lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-30 bg-white border-r border-slate-200/60 transform transition-all duration-500 lg:translate-x-0 lg:static lg:inset-0 flex flex-col shadow-sm",
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-100 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col h-full print:hidden",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full",
-        isSidebarCollapsed ? "w-24" : "w-72"
+        isSidebarCollapsed ? "w-20" : "w-64"
       )}>
+        {/* Logo Area */}
         <div className={cn(
-          "flex items-center h-20 border-b border-slate-100 shrink-0 relative",
-          isSidebarCollapsed ? "justify-center px-0" : "justify-between px-8"
+          "flex items-center h-16 shrink-0 px-6",
+          isSidebarCollapsed && "justify-center px-0"
         )}>
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center shadow-lg shadow-slate-200 shrink-0">
-              <Users className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-slate-900 rounded flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4 text-white" />
             </div>
             {!isSidebarCollapsed && (
-              <span className="text-xl font-black tracking-tighter text-slate-900 whitespace-nowrap">dataHRD</span>
+              <span className="text-base font-bold tracking-tight text-slate-900">HRCube</span>
             )}
           </div>
-          
-          {/* Desktop Collapse Toggle */}
-          <button 
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 bg-white border border-slate-200 rounded-full items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-400 shadow-md transition-all z-50"
-          >
-            {isSidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-          </button>
-
-          <button className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
-            <X className="w-5 h-5 text-slate-400 hover:text-slate-600" />
-          </button>
         </div>
 
-        <nav className="flex-1 p-6 space-y-2 overflow-y-auto">
-          {navigation.map((item) => {
+        {/* Navigation */}
+        <div className="flex-1 px-3 py-4 flex flex-col overflow-y-auto">
+          <nav className="space-y-0.5">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setIsSidebarOpen(false)}
+                  className={cn(
+                    "flex items-center rounded-lg transition-colors group",
+                    isSidebarCollapsed ? "justify-center p-3" : "px-3 py-2 text-[13px] font-medium",
+                    isActive 
+                      ? "bg-slate-50 text-slate-900 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.05)]" 
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/50"
+                  )}
+                >
+                  <item.icon className={cn(
+                    "w-4 h-4 transition-colors", 
+                    !isSidebarCollapsed && "mr-3",
+                    isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"
+                  )} />
+                  {!isSidebarCollapsed && item.name}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        
+        {/* User Profile */}
+        <div className="p-4 border-t border-slate-50">
+          <div className={cn("flex items-center gap-3", isSidebarCollapsed ? "justify-center" : "px-2")}>
+            <div className="relative shrink-0">
+              {auth.currentUser?.photoURL ? (
+                <img src={auth.currentUser.photoURL} alt="Profile" className="w-8 h-8 rounded-full grayscale hover:grayscale-0 transition-all shadow-sm" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 text-[10px] font-bold">
+                  {auth.currentUser?.email?.[0].toUpperCase() || 'A'}
+                </div>
+              )}
+            </div>
+            {!isSidebarCollapsed && (
+              <div className="overflow-hidden flex-1">
+                <div className="text-[12px] font-semibold text-slate-900 truncate">{auth.currentUser?.email?.split('@')[0]}</div>
+                <div className="text-[10px] font-medium text-slate-400 truncate">Administrator</div>
+              </div>
+            )}
+            {!isSidebarCollapsed && (
+              <button
+                onClick={() => signOut(auth)}
+                className="p-1.5 text-slate-400 hover:text-slate-900 rounded-md transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:overflow-visible">
+        
+        {/* Mobile Header */}
+        <header className="lg:hidden bg-white border-b border-slate-100 h-14 px-4 flex items-center justify-between shrink-0 sticky top-0 z-30 print:hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded bg-slate-900 flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="font-bold text-slate-900 text-sm">HRCube</span>
+          </div>
+          <button 
+            className="p-2 -mr-2 text-slate-500"
+            onClick={() => setIsSidebarOpen(true)}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </header>
+
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 p-4 md:p-8 lg:p-10 print:overflow-visible print:p-0">
+          <Outlet />
+        </main>
+
+        {/* BOTTOM NAV (Mobile Only) - Simplified */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 py-2 safe-bottom z-30 flex items-center justify-between shadow-[0_-1px_0_0_rgba(0,0,0,0.05)] print:hidden">
+          {navigation.slice(0, 4).map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                title={isSidebarCollapsed ? item.name : undefined}
                 className={cn(
-                  "flex items-center rounded-2xl transition-all duration-300",
-                  isSidebarCollapsed ? "justify-center p-3.5" : "px-5 py-3.5 text-sm font-bold tracking-tight",
-                  isActive 
-                    ? "bg-slate-900 text-white shadow-xl shadow-slate-200" 
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  "flex flex-col items-center gap-1.5 p-2 transition-colors",
+                  isActive ? "text-slate-900" : "text-slate-400"
                 )}
               >
-                <item.icon className={cn("w-5 h-5", !isSidebarCollapsed && "mr-4", isActive ? "text-white" : "text-slate-400")} />
-                {!isSidebarCollapsed && item.name}
+                <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5]")} />
+                <span className="text-[9px] font-bold uppercase tracking-wider">{item.name === 'Master Data Pegawai' ? 'Data' : item.name}</span>
               </Link>
             );
           })}
         </nav>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 h-20 flex items-center justify-between px-6 sm:px-8 lg:px-10 sticky top-0 z-10">
-          <button 
-            className="lg:hidden p-2.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-50"
-            onClick={() => setIsSidebarOpen(true)}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-          <div className="flex-1" />
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4">
-              <div className="text-right hidden sm:block">
-                <div className="text-xs font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Administrator</div>
-                <div className="text-sm font-bold text-slate-700 leading-none">
-                  {auth.currentUser?.email?.split('@')[0]}
-                </div>
-              </div>
-              {auth.currentUser?.photoURL ? (
-                <img src={auth.currentUser.photoURL} alt="Profile" className="w-10 h-10 rounded-2xl ring-4 ring-white shadow-lg" referrerPolicy="no-referrer" />
-              ) : (
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold shadow-sm">
-                  {auth.currentUser?.email?.[0].toUpperCase() || 'A'}
-                </div>
-              )}
-              <div className="w-px h-6 bg-slate-200 mx-1" />
-              <button
-                onClick={() => signOut(auth)}
-                className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95"
-                title="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <Outlet />
-        </main>
       </div>
     </div>
   );

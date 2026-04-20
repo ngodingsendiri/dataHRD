@@ -1,39 +1,83 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, getDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Employee } from '../types';
+import { Employee, AppSettings } from '../types';
 import { Modal } from '../components/Modal';
 import { EmployeeForm } from '../components/EmployeeForm';
-import { Plus, Search, Edit2, Trash2, Download, Upload, FileSpreadsheet, Sparkles, Loader2, Check, X, AlertCircle } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Download, Upload, FileSpreadsheet, Sparkles, Loader2, Check, X, AlertCircle, Printer, ArrowUpDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { handleFirestoreError, OperationType } from '../lib/error';
 import { extractEmployeeData, extractEmployeeDataFromText, mapExcelColumnsWithAI } from '../services/geminiService';
 
 export default function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | undefined>();
   const [error, setError] = useState<Error | null>(null);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Employee | 'pangkatGolongan'; direction: 'asc'|'desc'} | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
   
-  // AI Smart Scan States
-  const [isAIProcessing, setIsAIProcessing] = useState(false);
-  const [aiExtractedData, setAiExtractedData] = useState<Partial<Employee> | null>(null);
-  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
-  const aiFileInputRef = useRef<HTMLInputElement>(null);
+  // Print States
+  // Removed print states as they are now handled in the Print page
 
   useEffect(() => {
+    // Fetch Settings
+    const fetchSettings = async () => {
+      try {
+        const docRef = doc(db, 'shared/data/settings/app');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setSettings(docSnap.data() as AppSettings);
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
+
     const unsubscribe = onSnapshot(collection(db, 'shared/data/employees'), (snapshot) => {
       const data = snapshot.docs.map(doc => {
         const d = doc.data();
+
+        let updatedMasaKerja = d.masaKerja || '';
+        const statusVal = (d.status || '').toUpperCase();
+
+        if ((statusVal === 'PNS' || statusVal === 'CPNS') && d.nip) {
+          const nipStr = String(d.nip).replace(/[^0-9]/g, '');
+          if (nipStr.length >= 14) {
+            const yearAppt = parseInt(nipStr.substring(8, 12), 10);
+            const monthAppt = parseInt(nipStr.substring(12, 14), 10);
+            if (!isNaN(yearAppt) && !isNaN(monthAppt) && yearAppt > 1900 && yearAppt <= new Date().getFullYear() && monthAppt >= 1 && monthAppt <= 12) {
+              const now = new Date();
+              let years = now.getFullYear() - yearAppt;
+              let months = (now.getMonth() + 1) - monthAppt;
+              if (months < 0) { years--; months += 12; }
+              updatedMasaKerja = `${years} Tahun ${months} Bulan`;
+            }
+          }
+        } else if ((statusVal === 'PPPK' || statusVal === 'PPPKPW') && d.tmtKerja) {
+          const tmtDate = new Date(d.tmtKerja);
+          if (!isNaN(tmtDate.getTime())) {
+            const now = new Date();
+            let years = now.getFullYear() - tmtDate.getFullYear();
+            let months = now.getMonth() - tmtDate.getMonth();
+            if (now.getDate() < tmtDate.getDate()) { months--; }
+            if (months < 0) { years--; months += 12; }
+            if (years >= 0 && months >= 0) {
+              updatedMasaKerja = `${years} Tahun ${months} Bulan`;
+            }
+          }
+        }
+
         return {
           id: doc.id,
           ...d,
-          // MAPPING SATU ARAH: Membaca data lama E-Office ke format baku SIMPEG
-          // SIMPEG adalah Master Data, jadi struktur SIMPEG yang menjadi Source of Truth
+          masaKerja: updatedMasaKerja,
           nama: d.nama || d.name || '',
           pangkatGolongan: d.pangkatGolongan || d.pangkatGol || '',
           nik: d.nik || '',
@@ -92,8 +136,11 @@ export default function Employees() {
     setIsDeleteModalOpen(true);
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const confirmDelete = async () => {
     if (!employeeToDelete) return;
+    setIsDeleting(true);
     try {
       await deleteDoc(doc(db, 'shared/data/employees', employeeToDelete));
       setIsDeleteModalOpen(false);
@@ -104,154 +151,92 @@ export default function Employees() {
       } catch (e) {
         if (e instanceof Error) setError(e);
       }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleAIScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    setIsAIProcessing(true);
-    try {
-      const isExcel = file.type.includes('spreadsheet') || 
-                      file.type.includes('excel') || 
-                      file.name.endsWith('.xlsx') || 
-                      file.name.endsWith('.xls');
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          if (isExcel) {
-            const data = event.target?.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const json = XLSX.utils.sheet_to_json(worksheet);
-            // Send first 20 rows to AI to avoid token limits but give enough context
-            const textData = JSON.stringify(json.slice(0, 20), null, 2);
-            const extracted = await extractEmployeeDataFromText(textData);
-            setAiExtractedData(extracted);
-            setIsAIModalOpen(true);
-          } else {
-            const base64 = (event.target?.result as string).split(',')[1];
-            const extracted = await extractEmployeeData(base64, file.type);
-            setAiExtractedData(extracted);
-            setIsAIModalOpen(true);
-          }
-        } catch (err) {
-          setError(err instanceof Error ? err : new Error('Gagal mengekstrak data'));
-        } finally {
-          setIsAIProcessing(false);
-        }
-      };
-
-      if (isExcel) {
-        reader.readAsBinaryString(file);
-      } else {
-        reader.readAsDataURL(file);
-      }
-    } catch (err) {
-      console.error('AI Scan Error:', err);
-      setError(err instanceof Error ? err : new Error('Gagal memproses file dengan AI'));
-      setIsAIProcessing(false);
-    }
-    // Reset input
-    if (aiFileInputRef.current) aiFileInputRef.current.value = '';
-  };
-
-  const handleConfirmAIUpdate = async () => {
-    if (!aiExtractedData) return;
-
-    try {
-      // Sanitize status to match enum in rules
-      let status = aiExtractedData.status || 'Lainnya';
-      if (!['PNS', 'PPPK', 'Honorer', 'Lainnya'].includes(status)) {
-        status = 'Lainnya';
-      }
-
-      const sanitizedData = {
-        ...aiExtractedData,
-        status: status as Employee['status'],
-        updatedAt: Date.now()
-      };
-
-      // Check if employee already exists by NIK
-      let existingId = '';
-      if (aiExtractedData.nik) {
-        const q = query(collection(db, 'shared/data/employees'), where('nik', '==', aiExtractedData.nik));
-        const snapshot = await getDocs(q);
-        if (!snapshot.empty) existingId = snapshot.docs[0].id;
-      }
-
-      if (existingId) {
-        // Update existing
-        await updateDoc(doc(db, 'shared/data/employees', existingId), sanitizedData);
-      } else {
-        // Add new
-        await addDoc(collection(db, 'shared/data/employees'), {
-          ...sanitizedData,
-          createdAt: Date.now(),
-          dataKeluarga: []
-        });
-      }
-
-      setIsAIModalOpen(false);
-      setAiExtractedData(null);
-    } catch (err) {
-      try {
-        handleFirestoreError(err, OperationType.WRITE, 'shared/data/employees');
-      } catch (e) {
-        if (e instanceof Error) setError(e);
-      }
-    }
-  };
 
   const handleExport = () => {
-    const exportData = employees.map(({ id, dataKeluarga, createdAt, updatedAt, ...rest }) => ({
-      "N I P": rest.nip,
-      "N I K": rest.nik,
-      "Nama": rest.nama,
-      "JK": rest.jk,
-      "Tempat Lahir": rest.tempatLahir,
-      "Tanggal Lahir": rest.tanggalLahir,
-      "Jalan/Dusun": rest.jalanDusun,
-      "RT": rest.rt,
-      "RW": rest.rw,
-      "Desa/Kelurahan": rest.desaKelurahan,
-      "Kecamatan": rest.kecamatan,
-      "Kabupaten": rest.kabupaten,
-      "kelas jabatan": rest.kelasJabatan,
-      "beban kerja": rest.bebanKerja,
-      "TMT Kerja": rest.tmtKerja,
-      "Masa Kerja": rest.masaKerja,
-      "Pensiun": rest.pensiun,
-      "TMT Golongan Ruang": rest.tmtGolonganRuang,
-      "Pangkat": rest.pangkat,
-      "Gol": rest.gol,
-      "Tanggal Berkala Terakhir": rest.tanggalBerkalaTerakhir,
-      "Gaji Pokok": rest.gajiPokok,
-      "Besaran Gaji Kotor": rest.besaranGajiKotor,
-      "Jabatan": rest.jabatan,
-      "Bidang": rest.bidang,
-      "Status": rest.status,
-      "Nomor Karpeg": rest.nomorKarpeg,
-      "Pendidikan": rest.pendidikan,
-      "Jurusan": rest.jurusan,
-      "Diklat Jenjang": rest.diklatJenjang,
-      "Tahun Diklat": rest.tahunDiklat,
-      "Status Kawin": rest.statusKawin,
-      "Agama": rest.agama,
-      "Nomo HP": rest.nomorHp,
-      "Sisa Cuti Tahunan N": rest.sisaCutiN,
-      "Sisa Cuti Tahunan N1": rest.sisaCutiN1,
-      "Sisa Cuti Tahunan N2": rest.sisaCutiN2,
-      "Atasan Langsung": rest.atasanLangsung,
-      "NIP Atasan Langsung": rest.nipAtasanLangsung,
-      "Pejabat Wewenang": rest.pejabatWewenang,
-      "NIP Pejabat Wewenang": rest.nipPejabatWewenang,
-      "SK Terakhir Yang Dimiliki": rest.skTerakhir,
-      "Jumlah Tertanggung": rest.jumlahTertanggung
-    }));
+    const exportData = employees.map(({ id, dataKeluarga, createdAt, updatedAt, ...rest }) => {
+      const hierarchy = getHierarchy(rest as Employee);
+      return {
+        "N I P": rest.nip,
+        "N I K": rest.nik,
+        "Nama": rest.nama,
+        "JK": rest.jk,
+        "Tempat Lahir": rest.tempatLahir,
+        "Tanggal Lahir": rest.tanggalLahir,
+        "Jalan/Dusun": rest.jalanDusun,
+        "RT": rest.rt,
+        "RW": rest.rw,
+        "Desa/Kelurahan": rest.desaKelurahan,
+        "Kecamatan": rest.kecamatan,
+        "Kabupaten": rest.kabupaten,
+        "kelas jabatan": rest.kelasJabatan,
+        "beban kerja": rest.bebanKerja,
+        "TMT Kerja": rest.tmtKerja,
+        "Masa Kerja": rest.masaKerja,
+        "Pensiun": rest.pensiun,
+        "TMT Golongan Ruang": rest.tmtGolonganRuang,
+        "Pangkat": rest.pangkat,
+        "Gol": rest.gol,
+        "Tanggal Berkala Terakhir": rest.tanggalBerkalaTerakhir,
+        "Gaji Pokok": rest.gajiPokok,
+        "Besaran Gaji Kotor": rest.besaranGajiKotor,
+        "Jabatan": rest.jabatan,
+        "Bidang": rest.bidang,
+        "Status": rest.status,
+        "Nomor Karpeg": rest.nomorKarpeg,
+        "Pendidikan": rest.pendidikan,
+        "Jurusan": rest.jurusan,
+        "Diklat Jenjang": rest.diklatJenjang,
+        "Tahun Diklat": rest.tahunDiklat,
+        "Status Kawin": rest.statusKawin,
+        "Agama": rest.agama,
+        "Nomor HP": rest.nomorHp,
+        "Sisa Cuti Tahunan N": rest.sisaCutiN,
+        "Sisa Cuti Tahunan N1": rest.sisaCutiN1,
+        "Sisa Cuti Tahunan N2": rest.sisaCutiN2,
+        "Atasan Langsung": hierarchy.atasan,
+        "NIP Atasan Langsung": hierarchy.nipAtasan,
+        "Pejabat Wewenang": hierarchy.pejabat,
+        "NIP Pejabat Wewenang": hierarchy.nipPejabat,
+        "SK Terakhir Yang Dimiliki": rest.skTerakhir,
+        "Nama Istri/Suami": dataKeluarga?.find((k: any) => k.relation === 'Istri' || k.relation === 'Suami')?.name || '',
+        "Tanggal Lahir Pasangan": dataKeluarga?.find((k: any) => k.relation === 'Istri' || k.relation === 'Suami')?.birthDate || '',
+        "Perkawinan Pasangan": dataKeluarga?.find((k: any) => k.relation === 'Istri' || k.relation === 'Suami')?.marriageDate || '',
+        "Pekerjaan Pasangan": dataKeluarga?.find((k: any) => k.relation === 'Istri' || k.relation === 'Suami')?.occupation || '',
+        "Keterangan Pasangan": dataKeluarga?.find((k: any) => k.relation === 'Istri' || k.relation === 'Suami')?.description || '',
+        "Nama Anak 1": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[0]?.name || '',
+        "Tanggal Lahir Anak 1": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[0]?.birthDate || '',
+        "Perkawinan Anak 1": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[0]?.marriageDate || '',
+        "Pekerjaan Anak 1": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[0]?.occupation || '',
+        "Keterangan Anak 1": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[0]?.description || '',
+        "Nama Anak 2": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[1]?.name || '',
+        "Tanggal Lahir Anak 2": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[1]?.birthDate || '',
+        "Perkawinan Anak 2": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[1]?.marriageDate || '',
+        "Pekerjaan Anak 2": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[1]?.occupation || '',
+        "Keterangan Anak 2": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[1]?.description || '',
+        "Nama Anak 3": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[2]?.name || '',
+        "Tanggal Lahir Anak 3": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[2]?.birthDate || '',
+        "Perkawinan Anak 3": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[2]?.marriageDate || '',
+        "Pekerjaan Anak 3": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[2]?.occupation || '',
+        "Keterangan Anak 3": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[2]?.description || '',
+        "Nama Anak 4": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[3]?.name || '',
+        "Tanggal Lahir Anak 4": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[3]?.birthDate || '',
+        "Perkawinan Anak 4": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[3]?.marriageDate || '',
+        "Pekerjaan Anak 4": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[3]?.occupation || '',
+        "Keterangan Anak 4": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[3]?.description || '',
+        "Nama Anak 5": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[4]?.name || '',
+        "Tanggal Lahir Anak 5": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[4]?.birthDate || '',
+        "Perkawinan Anak 5": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[4]?.marriageDate || '',
+        "Pekerjaan Anak 5": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[4]?.occupation || '',
+        "Keterangan Anak 5": dataKeluarga?.filter((k: any) => k.relation === 'Anak')[4]?.description || '',
+        "Jumlah Tertanggung": rest.jumlahTertanggung
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Pegawai");
@@ -266,9 +251,8 @@ export default function Employees() {
       "TMT Golongan Ruang", "Pangkat", "Gol", "Tanggal Berkala Terakhir",
       "Gaji Pokok", "Besaran Gaji Kotor", "Jabatan", "Bidang", "Status",
       "Nomor Karpeg", "Pendidikan", "Jurusan", "Diklat Jenjang", "Tahun Diklat",
-      "Status Kawin", "Agama", "Nomo HP", "Sisa Cuti Tahunan N", "Sisa Cuti Tahunan N1",
-      "Sisa Cuti Tahunan N2", "Atasan Langsung", "NIP Atasan Langsung",
-      "Pejabat Wewenang", "NIP Pejabat Wewenang", "SK Terakhir Yang Dimiliki",
+      "Status Kawin", "Agama", "Nomor HP", "Sisa Cuti Tahunan N", "Sisa Cuti Tahunan N1",
+      "Sisa Cuti Tahunan N2", "SK Terakhir Yang Dimiliki",
       "Nama Istri/Suami", "Tanggal Lahir Pasangan", "Perkawinan Pasangan", "Pekerjaan Pasangan", "Keterangan Pasangan",
       "Nama Anak 1", "Tanggal Lahir Anak 1", "Perkawinan Anak 1", "Pekerjaan Anak 1", "Keterangan Anak 1",
       "Nama Anak 2", "Tanggal Lahir Anak 2", "Perkawinan Anak 2", "Pekerjaan Anak 2", "Keterangan Anak 2",
@@ -308,7 +292,6 @@ export default function Employees() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsImporting(true);
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
@@ -363,11 +346,13 @@ export default function Employees() {
         // If we found headers, we can use direct mapping
         if (headerIdx !== -1) {
           const dataRows = rows.slice(headerIdx + 1);
-          setImportProgress({ current: 0, total: dataRows.length });
+          
+          // Use batch to prevent freezing and multiple onSnapshot triggers
+          let batch = writeBatch(db);
+          let batchCount = 0;
 
           for (let i = 0; i < dataRows.length; i++) {
             const row = dataRows[i];
-            setImportProgress({ current: i + 1, total: dataRows.length });
             
             if (!row || row.length < 2) continue;
 
@@ -410,9 +395,10 @@ export default function Employees() {
 
             let rawStatus = String(getVal(row, ['Status']) || 'Lainnya').toUpperCase();
             let status: Employee['status'] = 'Lainnya';
-            if (rawStatus.includes('PNS') || rawStatus === 'CPNS') status = 'PNS';
+            if (rawStatus.includes('CPNS')) status = 'CPNS';
+            else if (rawStatus.includes('PPPKPW')) status = 'PPPKPW';
             else if (rawStatus.includes('PPPK')) status = 'PPPK';
-            else if (rawStatus.includes('HONORER')) status = 'Honorer';
+            else if (rawStatus.includes('PNS')) status = 'PNS';
 
             const employeeData: Partial<Employee> = {
               nip, nik, nama, 
@@ -447,29 +433,34 @@ export default function Employees() {
               tahunDiklat: String(getVal(row, ['Tahun Diklat']) || '').trim(),
               statusKawin: String(getVal(row, ['Status Kawin']) || '').trim(),
               agama: String(getVal(row, ['Agama']) || '').trim(),
-              nomorHp: String(getVal(row, ['Nomor HP', 'No HP']) || '').trim(),
+              nomorHp: String(getVal(row, ['Nomor HP', 'No HP', 'Nomo HP', 'No. HP']) || '').trim(),
               sisaCutiN: String(getVal(row, ['Sisa Cuti N']) || '').trim(),
               sisaCutiN1: String(getVal(row, ['Sisa Cuti N-1']) || '').trim(),
               sisaCutiN2: String(getVal(row, ['Sisa Cuti N-2']) || '').trim(),
-              atasanLangsung: String(getVal(row, ['Atasan Langsung']) || '').trim(),
-              nipAtasanLangsung: String(getVal(row, ['NIP Atasan Langsung']) || '').trim(),
-              pejabatWewenang: String(getVal(row, ['Pejabat Wewenang']) || '').trim(),
-              nipPejabatWewenang: String(getVal(row, ['NIP Pejabat Wewenang']) || '').trim(),
               skTerakhir: String(getVal(row, ['SK Terakhir']) || '').trim(),
               jumlahTertanggung: Number(getVal(row, ['Jumlah Tertanggung']) || 0),
               dataKeluarga,
             };
 
-            try {
-              await addDoc(collection(db, 'shared/data/employees'), {
-                ...employeeData,
-                createdAt: Date.now(),
-                updatedAt: Date.now()
-              });
-              successCount++;
-            } catch (err) {
-              console.error("Error importing row:", err);
+            const docRef = doc(collection(db, 'shared/data/employees'));
+            batch.set(docRef, {
+              ...employeeData,
+              createdAt: Date.now(),
+              updatedAt: Date.now()
+            });
+            
+            batchCount++;
+            successCount++;
+
+            if (batchCount >= 400) {
+              await batch.commit();
+              batch = writeBatch(db);
+              batchCount = 0;
             }
+          }
+          
+          if (batchCount > 0) {
+            await batch.commit();
           }
         } else {
           // AI SEMI-AUTO MAPPING (Fallback if no standard headers found)
@@ -484,11 +475,11 @@ export default function Employees() {
           }
           
           const dataRows = rows.slice(1);
-          setImportProgress({ current: 0, total: dataRows.length });
+          let batch = writeBatch(db);
+          let batchCount = 0;
           
           for (let i = 0; i < dataRows.length; i++) {
             const row = dataRows[i];
-            setImportProgress({ current: i + 1, total: dataRows.length });
             if (!row || row.length === 0) continue;
 
             const employeeData: any = {
@@ -505,13 +496,21 @@ export default function Employees() {
             });
 
             if (employeeData.nama || employeeData.nik || employeeData.nip) {
-              try {
-                await addDoc(collection(db, 'shared/data/employees'), employeeData);
-                successCount++;
-              } catch (err) {
-                console.error("Error importing row with AI mapping:", err);
+              const docRef = doc(collection(db, 'shared/data/employees'));
+              batch.set(docRef, employeeData);
+              batchCount++;
+              successCount++;
+
+              if (batchCount >= 400) {
+                await batch.commit();
+                batch = writeBatch(db);
+                batchCount = 0;
               }
             }
+          }
+          
+          if (batchCount > 0) {
+            await batch.commit();
           }
         }
         
@@ -520,13 +519,70 @@ export default function Employees() {
         console.error("Import error:", err);
         alert("Gagal mengimport data. Pastikan format file benar.");
       } finally {
-        setIsImporting(false);
-        setImportProgress({ current: 0, total: 0 });
         e.target.value = ''; // Reset input
       }
     };
     reader.readAsBinaryString(file);
   };
+
+  const getHierarchy = (emp: Employee) => {
+    const kadis = employees.find(e => e.jabatan?.toLowerCase().includes('kepala dinas'));
+    const sekre = employees.find(e => e.jabatan?.toLowerCase().includes('sekretaris') && e.bidang?.toLowerCase().includes('sekretariat'));
+    
+    // Find Kabid for the employee's bidang
+    const kabid = employees.find(e => e.jabatan?.toLowerCase().includes('kepala bidang') && e.bidang === emp.bidang);
+
+    const isKadis = emp.jabatan?.toLowerCase().includes('kepala dinas');
+    const isSekre = emp.jabatan?.toLowerCase().includes('sekretaris') && emp.bidang?.toLowerCase().includes('sekretariat');
+    const isKabid = emp.jabatan?.toLowerCase().includes('kepala bidang');
+    const isSekretariat = emp.bidang?.toLowerCase().includes('sekretariat');
+
+    if (isKadis) {
+      return {
+        atasan: settings?.sekdaNama || '-',
+        nipAtasan: settings?.sekdaNip || '-',
+        pejabat: settings?.bupatiNama || '-',
+        nipPejabat: '-'
+      };
+    }
+
+    if (isSekre) {
+      return {
+        atasan: kadis?.nama || '-',
+        nipAtasan: kadis?.nip || '-',
+        pejabat: settings?.sekdaNama || '-',
+        nipPejabat: settings?.sekdaNip || '-'
+      };
+    }
+
+    if (isKabid) {
+      return {
+        atasan: sekre?.nama || '-',
+        nipAtasan: sekre?.nip || '-',
+        pejabat: kadis?.nama || '-',
+        nipPejabat: kadis?.nip || '-'
+      };
+    }
+
+    if (isSekretariat) {
+      return {
+        atasan: sekre?.nama || '-',
+        nipAtasan: sekre?.nip || '-',
+        pejabat: kadis?.nama || '-',
+        nipPejabat: kadis?.nip || '-'
+      };
+    }
+
+    // Default for other employees in Bidang
+    return {
+      atasan: kabid?.nama || '-',
+      nipAtasan: kabid?.nip || '-',
+      pejabat: kadis?.nama || '-',
+      nipPejabat: kadis?.nip || '-'
+    };
+  };
+
+  const val = (v: any) => v ? v : <span className="text-slate-300">—</span>;
 
   const filteredEmployees = employees.filter(emp => {
     const searchLower = searchTerm.toLowerCase();
@@ -537,180 +593,325 @@ export default function Employees() {
     return nama.includes(searchLower) || nip.includes(searchLower) || nik.includes(searchLower);
   });
 
+  const sortedEmployees = React.useMemo(() => {
+    let sortableItems = [...filteredEmployees];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        let aValue = a[sortConfig.key] || '';
+        let bValue = b[sortConfig.key] || '';
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [filteredEmployees, sortConfig]);
+
+  const displayedEmployees = sortedEmployees.slice(0, rowsPerPage);
+
+  const handleSort = (key: keyof Employee | 'pangkatGolongan') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const newSet = new Set(selectedIds);
+      displayedEmployees.forEach(emp => { if (emp.id) newSet.add(emp.id); });
+      setSelectedIds(newSet);
+    } else {
+      const newSet = new Set(selectedIds);
+      displayedEmployees.forEach(emp => { if (emp.id) newSet.delete(emp.id); });
+      setSelectedIds(newSet);
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const handleBulkDelete = async () => {
+    setIsDeletingBulk(true);
+    try {
+      let batch = writeBatch(db);
+      let i = 0;
+      for (const id of selectedIds) {
+        batch.delete(doc(db, 'shared/data/employees', id));
+        i++;
+        if (i % 400 === 0) {
+          await batch.commit();
+          batch = writeBatch(db);
+        }
+      }
+      if (i > 0) await batch.commit();
+      setSelectedIds(new Set());
+      setIsBulkDeleteModalOpen(false);
+    } catch (err) {
+      try { handleFirestoreError(err, OperationType.DELETE, 'shared/data/employees'); }
+      catch (e) { if (e instanceof Error) setError(e); }
+    } finally {
+      setIsDeletingBulk(false);
+    }
+  };
+
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+    <div className="space-y-10 max-w-[1400px] mx-auto pb-12 antialiased">
+      {/* Page Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 border-b border-slate-100 pb-8">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Master Data Pegawai</h1>
-          <p className="mt-2 text-sm text-slate-500 font-medium">Kelola informasi dan data kepegawaian secara terpusat dan efisien.</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Database Pegawai</h1>
+          <p className="text-[13px] text-slate-500 mt-1">Kelola data induk pegawai, jabatan, dan unit kerja secara terpusat.</p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <button 
-            onClick={handleDownloadTemplate}
-            className="inline-flex items-center px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95"
+        <div className="flex flex-wrap items-center gap-2">
+           <button 
+              onClick={handleDownloadTemplate}
+              className="group inline-flex items-center px-4 py-2 text-[12px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all shadow-sm active:scale-95"
           >
-            <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-500" />
+            <FileSpreadsheet className="w-3.5 h-3.5 mr-2 text-emerald-600" />
             Template
           </button>
-          
-          <label className={`cursor-pointer inline-flex items-center px-5 py-2.5 text-sm font-bold rounded-2xl shadow-sm transition-all border active:scale-95
-            ${isAIProcessing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'text-indigo-600 bg-white border-indigo-100 hover:bg-indigo-50/50'}`}>
-            {isAIProcessing ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4 mr-2 text-indigo-500" />
-            )}
-            Smart Scan
-            <input 
-              type="file" 
-              accept="image/*, .pdf, .xlsx, .xls" 
-              className="hidden" 
-              onChange={handleAIScan} 
-              disabled={isAIProcessing}
-              ref={aiFileInputRef}
-            />
-          </label>
 
-          <label className="cursor-pointer inline-flex items-center px-5 py-2.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 hover:border-slate-300 shadow-sm transition-all active:scale-95">
-            <Upload className="w-4 h-4 mr-2 text-slate-400" />
-            Import
-            <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImport} />
-          </label>
-          
-          <button 
-            onClick={() => { setEditingEmployee(undefined); setIsModalOpen(true); }}
-            className="inline-flex items-center px-6 py-2.5 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 shadow-lg shadow-slate-200 transition-all active:scale-95"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Tambah
-          </button>
+          <div className="flex bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            {selectedIds.size > 0 && (
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-white bg-red-600 hover:bg-red-700 transition-colors border-r border-red-700"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Hapus {selectedIds.size}</span>
+              </button>
+            )}
+            <button 
+              onClick={() => { setEditingEmployee(undefined); setIsModalOpen(true); }}
+              className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Tambah</span>
+            </button>
+            <label className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50 border-r border-slate-100 transition-colors cursor-pointer order-first">
+              <Upload className="w-3.5 h-3.5" />
+              <span>Impor</span>
+              <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImport} />
+            </label>
+            <button 
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Ekspor</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-[32px] border border-slate-200/60 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="relative max-w-md flex-1">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-slate-400" />
+      <div className="space-y-6">
+        {/* Search Row */}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:w-96 group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3 border border-slate-200 rounded-2xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-200 sm:text-sm transition-all shadow-sm"
-              placeholder="Cari Nama, NIP, atau NIK..."
+              className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+              placeholder="Cari nama, NIP, atau NIK..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Tampilkan</span>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:block whitespace-nowrap">Baris :</span>
             <select 
-              value={rowsPerPage}
+              value={rowsPerPage} 
               onChange={(e) => setRowsPerPage(Number(e.target.value))}
-              className="text-xs font-bold text-slate-700 bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-4 focus:ring-indigo-50 transition-all cursor-pointer shadow-sm"
+              className="bg-white border border-slate-200 rounded px-2 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900/10 active:scale-95 transition-all cursor-pointer shadow-sm"
             >
               <option value={10}>10 Baris</option>
-              <option value={25}>25 Baris</option>
+              <option value={20}>20 Baris</option>
               <option value={50}>50 Baris</option>
               <option value={100}>100 Baris</option>
             </select>
           </div>
         </div>
+
+        <div className="bg-white rounded-lg border border-slate-100 overflow-hidden flex flex-col h-[600px] shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
         
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100">
-            <thead>
-              <tr className="bg-slate-50/30">
-                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16">No.</th>
-                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-28">Aksi</th>
-                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nama Pegawai</th>
-                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identitas</th>
-                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jabatan & Unit</th>
-                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pangkat / Pend.</th>
-                <th className="px-6 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+        {/* Desktop Table View */}
+        <div className="hidden lg:block flex-1 overflow-auto bg-slate-50">
+          <table className="min-w-[1500px] w-full border-collapse bg-white">
+            <thead className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100">
+              <tr>
+                <th className="sticky left-0 z-30 bg-slate-50 px-4 py-3 border-r border-slate-100 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-14">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/20 cursor-pointer"
+                      onChange={handleSelectAll}
+                      checked={displayedEmployees.length > 0 && displayedEmployees.every(emp => emp.id && selectedIds.has(emp.id))}
+                    />
+                    <span>No.</span>
+                  </div>
+                </th>
+                <th className="sticky left-[56px] z-30 bg-slate-50 px-4 py-3 border-r border-slate-100 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest w-[72px]">Aksi</th>
+                <th onClick={() => handleSort('nama')} className="sticky left-[128px] z-30 bg-slate-50 px-4 py-3 border-r border-slate-100 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-1.5">Nama Lengkap <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'nama' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('nip')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">NIP <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'nip' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('nik')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">NIK <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'nik' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('jk')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">L/P <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'jk' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('jabatan')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">Jabatan <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'jabatan' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('bidang')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">Bidang <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'bidang' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('status')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">Status <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'status' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('pangkatGolongan')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">Gol <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'pangkatGolongan' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
+                <th onClick={() => handleSort('nomorHp')} className="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap border-b border-slate-100 cursor-pointer hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-1.5">HP <ArrowUpDown className={`w-3 h-3 ${sortConfig?.key === 'nomorHp' ? 'text-slate-900' : 'text-slate-300'}`} /></div>
+                </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-50">
-              {filteredEmployees.slice(0, rowsPerPage).map((emp, index) => (
-                <tr key={emp.id} className="group hover:bg-slate-50/80 transition-all duration-200">
-                  <td className="px-6 py-4 whitespace-nowrap text-[11px] font-bold text-slate-300">
-                    {String(index + 1).padStart(2, '0')}
+            <tbody className="bg-white">
+              {displayedEmployees.map((emp, index) => (
+                <tr key={emp.id} className="group hover:bg-slate-50 transition-colors duration-150 border-b border-slate-100 last:border-0">
+                  <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap text-[10px] font-bold text-slate-400">
+                    <div className="flex items-center gap-2">
+                       <input type="checkbox" className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/20 cursor-pointer transition-all"
+                         onChange={() => handleSelectOne(emp.id!)}
+                         checked={emp.id ? selectedIds.has(emp.id) : false}
+                       />
+                       <span>{String(index + 1).padStart(2, '0')}</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="sticky left-[56px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
-                      <button 
-                        onClick={() => { setEditingEmployee(emp); setIsModalOpen(true); }}
-                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                        title="Edit"
-                      >
+                      <button onClick={() => { setEditingEmployee(emp); setIsModalOpen(true); }} className="p-1 text-slate-300 hover:text-slate-900 transition-colors" title="Edit">
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
-                      <button 
-                        onClick={() => {
-                          alert(`Arsip data ${emp.nama}`);
-                        }}
-                        className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
-                        title="Arsip"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteClick(emp.id!)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                        title="Hapus"
-                      >
+                      <button onClick={() => handleDeleteClick(emp.id!)} className="p-1 text-slate-300 hover:text-red-600 transition-colors" title="Hapus">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors leading-none">{emp.nama || '-'}</div>
-                      <div className="text-[10px] font-medium text-slate-400 mt-1.5 tracking-tight">NIP: {emp.nip || '-'}</div>
+                  <td className="sticky left-[128px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-[12px] font-bold text-slate-900">{val(emp.nama)}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-[12px] text-slate-600 font-bold tracking-tight">{emp.nik || '-'}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase border ${emp.jk === 'L' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-pink-50 text-pink-600 border-pink-100'}`}>
-                        {emp.jk === 'L' ? 'Laki-laki' : emp.jk === 'P' ? 'Perempuan' : '-'}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-bold">{emp.nomorHp || '-'}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-[12px] text-slate-800 font-bold max-w-[200px] truncate" title={emp.jabatan}>{emp.jabatan || '-'}</div>
-                    <div className="text-[10px] text-indigo-500 mt-1 font-black uppercase tracking-widest">{emp.bidang || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-[12px] text-slate-700 font-bold">{emp.pangkatGolongan || '-'}</div>
-                    <div className="text-[10px] text-slate-400 mt-1 italic font-medium">{emp.pendidikan || '-'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2.5 py-1 inline-flex text-[9px] font-black uppercase tracking-widest rounded-lg border
-                      ${emp.status === 'PNS' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
-                        emp.status === 'PPPK' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 
-                        emp.status === 'Honorer' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                        'bg-slate-50 text-slate-700 border-slate-100'}`}>
-                      {emp.status || 'N/A'}
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">{val(emp.nip)}</td>
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">{val(emp.nik)}</td>
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500">{val(emp.jk)}</td>
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-700 font-medium">{val(emp.jabatan)}</td>
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-900 font-bold">{val(emp.bidang)}</td>
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap">
+                    <span className={`px-2 py-0.5 inline-flex text-[9px] font-bold uppercase tracking-wider rounded border
+                      ${emp.status === 'PNS' ? 'bg-slate-900 text-white border-slate-900' : 
+                        emp.status === 'PPPK' ? 'bg-white text-slate-900 border-slate-200' : 
+                        'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                      {val(emp.status)}
                     </span>
                   </td>
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">{val(emp.pangkatGolongan)}</td>
+                  <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums tracking-tight">{val(emp.nomorHp)}</td>
                 </tr>
               ))}
               {filteredEmployees.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
+                  <td colSpan={16} className="px-6 py-16 text-center bg-white">
                     <div className="flex flex-col items-center justify-center">
-                      <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
-                        <Search className="w-6 h-6 text-slate-300" />
+                      <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-4 ring-4 ring-white shadow-sm border border-slate-100">
+                        <Search className="w-6 h-6 text-slate-400" />
                       </div>
                       <h3 className="text-sm font-semibold text-slate-900">Tidak ada data ditemukan</h3>
-                      <p className="text-xs text-slate-500 mt-1">Coba sesuaikan kata kunci pencarian Anda.</p>
+                      <p className="text-xs text-slate-500 mt-1 max-w-sm">Coba sesuaikan kata kunci pencarian Anda atau tambahkan data pegawai baru.</p>
                     </div>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="lg:hidden flex-1 overflow-y-auto bg-slate-50/50 p-4 space-y-4">
+          {filteredEmployees.slice(0, rowsPerPage).map((emp) => (
+            <div key={emp.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-slate-100">
+                <div className="flex justify-between items-start gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 leading-tight">{emp.nama || '-'}</h3>
+                    <div className="text-xs text-slate-500 mt-1 font-medium">{emp.nip ? `NIP: ${emp.nip}` : 'NIP: -'}</div>
+                  </div>
+                  <span className={`px-2 py-1 inline-flex text-[10px] font-bold uppercase tracking-wider rounded border shrink-0
+                    ${emp.status === 'PNS' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
+                      emp.status === 'CPNS' ? 'bg-sky-50 text-sky-700 border-sky-100' : 
+                      emp.status === 'PPPK' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 
+                      emp.status === 'PPPKPW' ? 'bg-violet-50 text-violet-700 border-violet-100' :
+                      'bg-slate-50 text-slate-700 border-slate-100'}`}>
+                    {emp.status || '-'}
+                  </span>
+                </div>
+              </div>
+              <div className="p-4 grid grid-cols-2 gap-y-4 gap-x-2 bg-slate-50/30">
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Jabatan</div>
+                  <div className="text-xs font-semibold text-slate-700">{emp.jabatan || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Unit Kerja</div>
+                  <div className="text-xs font-semibold text-indigo-600">{emp.bidang || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pangkat/Gol</div>
+                  <div className="text-xs text-slate-600">{emp.pangkatGolongan || '-'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">No HP</div>
+                  <div className="text-xs text-slate-600 font-medium">{emp.nomorHp || '-'}</div>
+                </div>
+              </div>
+              <div className="p-3 border-t border-slate-100 bg-white flex items-center justify-end gap-2">
+                <button 
+                  onClick={() => { setEditingEmployee(emp); setIsModalOpen(true); }}
+                  className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
+                >
+                  <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+                  Edit
+                </button>
+                <button 
+                  onClick={() => handleDeleteClick(emp.id!)}
+                  className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  Hapus
+                </button>
+              </div>
+            </div>
+          ))}
+          {filteredEmployees.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
+              <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Search className="w-6 h-6 text-slate-300" />
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900">Tidak ada data ditemukan</h3>
+              <p className="text-xs text-slate-500 mt-1">Coba sesuaikan kata pencarian.</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -726,88 +927,6 @@ export default function Employees() {
         />
       </Modal>
 
-      {/* AI Preview Modal */}
-      <Modal
-        isOpen={isAIModalOpen}
-        onClose={() => setIsAIModalOpen(false)}
-        title="Konfirmasi Hasil Scan AI"
-      >
-        <div className="space-y-6">
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex gap-4">
-            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-indigo-900">AI Berhasil Mengekstrak Data</h4>
-              <p className="text-xs text-indigo-700 mt-1">
-                Silakan tinjau data di bawah ini sebelum memperbarui database. Jika NIK sudah ada, data akan diperbarui secara otomatis.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {aiExtractedData && Object.entries(aiExtractedData).map(([key, value]) => {
-              if (key === 'dataKeluarga' || key === 'createdAt' || key === 'updatedAt' || !value) return null;
-              return (
-                <div key={key} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    {key.replace(/([A-Z])/g, ' $1').trim()}
-                  </label>
-                  <div className="text-sm font-medium text-slate-900">{String(value)}</div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              onClick={() => setIsAIModalOpen(false)}
-              className="flex-1 px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
-            >
-              Batal
-            </button>
-            <button
-              onClick={handleConfirmAIUpdate}
-              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center justify-center"
-            >
-              <Check className="w-4 h-4 mr-2" />
-              Konfirmasi & Simpan
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Import Progress Modal */}
-      <Modal
-        isOpen={isImporting}
-        onClose={() => {}}
-        title="Sedang Mengimport Data..."
-      >
-        <div className="py-8 flex flex-col items-center justify-center space-y-6">
-          <div className="relative w-24 h-24">
-            <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
-            <div 
-              className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"
-              style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }}
-            ></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-lg font-bold text-indigo-600">
-                {Math.round((importProgress.current / importProgress.total) * 100) || 0}%
-              </span>
-            </div>
-          </div>
-          <div className="text-center">
-            <p className="text-slate-600 font-medium">Memproses baris ke-{importProgress.current} dari {importProgress.total}</p>
-            <p className="text-slate-400 text-xs mt-1 italic">Mohon tunggu sebentar, jangan tutup halaman ini...</p>
-          </div>
-          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div 
-              className="bg-indigo-600 h-full transition-all duration-300 ease-out"
-              style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -831,15 +950,69 @@ export default function Employees() {
           <div className="flex gap-3 pt-4">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
-              className="flex-1 px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+              disabled={isDeleting}
+              className="flex-1 px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
             >
               Batal
             </button>
             <button
               onClick={confirmDelete}
-              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-200 transition-all flex items-center justify-center"
+              disabled={isDeleting}
+              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              Ya, Hapus Data
+              {isDeleting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Menghapus...
+                </>
+              ) : (
+                'Ya, Hapus Data'
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk Delete Modal */}
+      <Modal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => setIsBulkDeleteModalOpen(false)}
+        title="Konfirmasi Hapus Kolektif"
+      >
+        <div className="space-y-6">
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex gap-4">
+            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-red-900">Hapus {selectedIds.size} Data Pegawai?</h4>
+              <p className="text-xs text-red-700 mt-1">
+                Tindakan ini tidak dapat dibatalkan. Semua data terkait {selectedIds.size} pegawai ini akan dihapus secara permanen dari sistem.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={() => setIsBulkDeleteModalOpen(false)}
+              disabled={isDeletingBulk}
+              className="flex-1 px-4 py-3 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
+            >
+              Batal
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={isDeletingBulk}
+              className="flex-1 px-4 py-3 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isDeletingBulk ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Menghapus...
+                </>
+              ) : (
+                'Ya, Hapus Kolektif'
+              )}
             </button>
           </div>
         </div>
@@ -858,5 +1031,6 @@ export default function Employees() {
         </div>
       )}
     </div>
-  );
+  </div>
+);
 }

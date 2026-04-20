@@ -20,6 +20,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Rules for the settings collection
+    match /shared/data/settings/{settingId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
     // Default deny for all other paths
     match /{document=**} {
       allow read, write: if false;
