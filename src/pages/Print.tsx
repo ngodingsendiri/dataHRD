@@ -174,11 +174,9 @@ export default function Print() {
         {/* Actual Print Paper Container */}
         <div 
           ref={printRef}
-          className="bg-white mx-auto shadow-2xl print-container text-[12pt]"
+          className="bg-white mx-auto shadow-2xl print-container text-[12pt] w-full max-w-[210mm] p-[15mm] print:max-w-full print:w-full print:p-0"
           style={{
-            width: '210mm',
             minHeight: '297mm',
-            padding: '10mm',
             fontFamily: 'Arial, Helvetica, sans-serif'
           }}
         >
@@ -202,7 +200,7 @@ export default function Print() {
 
           {/* DOCUMENT HEADER */}
           <div className="text-center mb-6 space-y-1">
-            <h2 className="text-[12pt] font-bold uppercase underline underline-offset-4">{customTitle}</h2>
+            <h2 className="text-[12pt] font-bold uppercase">{customTitle}</h2>
             {customSubtitle && <p className="text-[12pt] font-bold">{customSubtitle}</p>}
           </div>
 
@@ -210,30 +208,28 @@ export default function Print() {
           <table className="w-full border-collapse mb-10 text-[12pt] leading-tight">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border border-black px-2 py-2 w-10 text-center font-bold align-middle">NO</th>
-                <th className="border border-black px-2 py-2 text-center font-bold align-middle">NAMA PEGAWAI / NIP</th>
-                <th className="border border-black px-2 py-2 w-12 text-center font-bold align-middle">L/P</th>
-                <th className="border border-black px-2 py-2 text-center font-bold w-48 align-middle">JABATAN / GOLONGAN</th>
-                <th className="border border-black px-2 py-2 w-40 font-bold text-center align-middle">{printType === 'tanda_terima' ? 'TANDA TERIMA' : 'TANDA TANGAN'}</th>
+                <th className="border border-black px-2 py-1 w-10 text-center font-bold align-middle">NO</th>
+                <th className="border border-black px-2 py-1 text-center font-bold align-middle">NAMA PEGAWAI</th>
+                <th className="border border-black px-2 py-1 w-10 text-center font-bold align-middle">JK</th>
+                <th className="border border-black px-2 py-1 w-44 text-center font-bold align-middle">NIP</th>
+                <th className="border border-black px-2 py-1 w-40 font-bold text-center align-middle">{printType === 'tanda_terima' ? 'TANDA TERIMA' : 'TANDA TANGAN'}</th>
               </tr>
             </thead>
             <tbody>
               {filteredEmployees.map((emp, idx) => (
-                <tr key={emp.id || idx}>
-                  <td className="border border-black px-2 py-2 text-center align-top">{idx + 1}</td>
-                  <td className="border border-black px-3 py-2 align-top">
-                    <div className="font-bold text-[12pt]">{emp.nama}</div>
-                    <div className="text-[12pt] mt-1">NIP. {emp.nip || '-'}</div>
+                <tr key={emp.id || idx} className="h-8">
+                  <td className="border border-black px-2 py-1 text-center align-middle">{idx + 1}</td>
+                  <td className="border border-black px-3 py-1 align-middle">
+                    <div className="text-[11pt] leading-none">{emp.nama}</div>
                   </td>
-                  <td className="border border-black px-2 py-2 text-center align-top text-[12pt]">{emp.jk || '-'}</td>
-                  <td className="border border-black px-3 py-2 align-top">
-                    <div className="text-[12pt]">{emp.jabatan || '-'}</div>
-                    <div className="text-[12pt] mt-1">{emp.pangkatGolongan || ''}</div>
+                  <td className="border border-black px-1 py-1 text-center align-middle text-[11pt]">{emp.jk || '-'}</td>
+                  <td className="border border-black px-2 py-1 align-middle text-center">
+                    <div className="text-[11pt] leading-none">{emp.nip || '-'}</div>
                   </td>
-                  <td className="border border-black px-3 py-2 align-top relative">
-                    {/* Odd rows left aligned, Even rows right aligned signature line */}
-                    <div className={`text-[12pt] ${idx % 2 === 0 ? 'text-left' : 'text-center pl-8 whitespace-nowrap'}`}>
-                      {idx + 1}. .....................
+                  <td className="border border-black px-2 py-1 align-middle">
+                    {/* Odd rows left aligned, Even rows indented slightly space for TTD */}
+                    <div className={`text-[11pt] font-semibold ${idx % 2 === 0 ? 'text-left pl-1' : 'text-left pl-10'}`}>
+                      {idx + 1}.
                     </div>
                   </td>
                 </tr>
@@ -271,7 +267,7 @@ export default function Print() {
       <style dangerouslySetInnerHTML={{__html: `
         @page {
           size: A4 portrait;
-          margin: 10mm;
+          margin: 15mm;
         }
         @media print {
           body {
@@ -285,10 +281,12 @@ export default function Print() {
           }
           .print-container {
             width: 100% !important;
+            max-width: 100% !important;
             min-height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
             box-shadow: none !important;
+            border: none !important;
           }
         }
       `}} />
