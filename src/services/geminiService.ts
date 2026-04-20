@@ -1,7 +1,19 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Employee } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+
+const getAiClient = (): GoogleGenAI => {
+  if (!aiClient) {
+    // We use optional chaining and a fallback to avoid "process is not defined" errors in browser environments built without the env var
+    const apiKey = typeof process !== 'undefined' && process.env ? process.env.GEMINI_API_KEY : '';
+    if (!apiKey) {
+      console.warn("GEMINI_API_KEY is not set. AI features might fail.");
+    }
+    aiClient = new GoogleGenAI({ apiKey: apiKey || 'dummy-key' });
+  }
+  return aiClient;
+};
 
 export const extractEmployeeDataFromText = async (textData: string): Promise<Partial<Employee>> => {
   const prompt = `
@@ -16,7 +28,7 @@ export const extractEmployeeDataFromText = async (textData: string): Promise<Par
     ${textData}
   `;
 
-  const response = await ai.models.generateContent({
+  const response = await getAiClient().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: [{ parts: [{ text: prompt }] }],
     config: {
@@ -68,7 +80,7 @@ export const extractEmployeeData = async (fileData: string, mimeType: string): P
     For dates, use YYYY-MM-DD format if possible.
   `;
 
-  const response = await ai.models.generateContent({
+  const response = await getAiClient().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: [
       {
@@ -148,7 +160,7 @@ export const mapExcelColumnsWithAI = async (headers: string[]): Promise<Record<s
     5. If you are unsure, do not map that header.
   `;
 
-  const response = await ai.models.generateContent({
+  const response = await getAiClient().models.generateContent({
     model: "gemini-3-flash-preview",
     contents: [{ parts: [{ text: prompt }] }],
     config: {
