@@ -166,8 +166,8 @@ export default function Print() {
       </div>
 
       {/* Preview Section */}
-      <div className="bg-slate-100 p-8 rounded-xl border border-slate-200 overflow-x-auto print-hidden">
-        <div className="text-center mb-6 text-sm font-bold text-slate-400 tracking-widest uppercase">
+      <div className="bg-slate-100 p-8 rounded-xl border border-slate-200 overflow-x-auto print:p-0 print:bg-transparent print:border-none print:shadow-none print:-mx-4 print:overflow-visible">
+        <div className="text-center mb-6 text-sm font-bold text-slate-400 tracking-widest uppercase print:hidden">
           — Area Pratinjau Cetak —
         </div>
         

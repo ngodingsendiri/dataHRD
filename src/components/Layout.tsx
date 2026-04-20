@@ -19,7 +19,7 @@ export default function Layout() {
   ];
 
   return (
-    <div className="h-screen w-full bg-white flex overflow-hidden font-sans antialiased text-slate-900 print:h-auto print:overflow-visible">
+    <div className="h-screen w-full bg-white flex overflow-hidden font-sans antialiased text-slate-900 print:block print:h-auto print:overflow-visible">
       {/* Mobile sidebar backdrop */}
       {isSidebarOpen && (
         <div 
@@ -110,7 +110,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:overflow-visible">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:block print:overflow-visible">
         
         {/* Mobile Header */}
         <header className="lg:hidden bg-white border-b border-slate-100 h-14 px-4 flex items-center justify-between shrink-0 sticky top-0 z-30 print:hidden">
@@ -128,7 +128,7 @@ export default function Layout() {
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 p-4 md:p-8 lg:p-10 print:overflow-visible print:p-0">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 p-4 md:p-8 lg:p-10 print:block print:overflow-visible print:p-0">
           <Outlet />
         </main>
 

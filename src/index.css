@@ -9,3 +9,14 @@ body {
   @apply antialiased text-slate-800 bg-slate-50/50;
   font-family: "Inter", sans-serif;
 }
+
+@media print {
+  html, body, #root {
+    height: auto !important;
+    min-height: auto !important;
+    width: 100% !important;
+    overflow: visible !important;
+    display: block !important;
+    background-color: white !important;
+  }
+}
