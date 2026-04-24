@@ -1,15 +1,17 @@
 import { useForm, useFieldArray } from 'react-hook-form';
-import { Employee } from '../types';
+import { Employee, AppSettings } from '../types';
 import { Plus, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface EmployeeFormProps {
   initialData?: Employee;
+  settings?: AppSettings | null;
   onSubmit: (data: Employee) => void;
   onCancel: () => void;
 }
 
-export function EmployeeForm({ initialData, onSubmit, onCancel }: EmployeeFormProps) {
-  const { register, control, handleSubmit, formState: { errors } } = useForm<Employee>({
+export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: EmployeeFormProps) {
+  const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<Employee>({
     defaultValues: initialData || {
       nik: '', nama: '', nip: '', jk: 'L', tempatLahir: '', tanggalLahir: '',
       jalanDusun: '', rt: '', rw: '', desaKelurahan: '', kecamatan: '', kabupaten: '',
@@ -28,6 +30,37 @@ export function EmployeeForm({ initialData, onSubmit, onCancel }: EmployeeFormPr
     control,
     name: "dataKeluarga"
   });
+
+  const jabatan = watch('jabatan');
+
+  useEffect(() => {
+    if (!settings?.jabatanKamusCsv || !jabatan) return;
+    
+    // Parse kamus
+    const rows = settings.jabatanKamusCsv.split('\n');
+    let matchedKelas = '';
+    let matchedBeban = '';
+
+    for (const row of rows) {
+      if (!row || row.trim() === '') continue;
+      // split by ; or tab
+      const cols = row.split(/;|\t/);
+      if (cols.length >= 4) {
+        // Assume format: No;Jabatan;Kelas;Beban Kerja
+        const kamusJabatan = cols[1]?.trim().toLowerCase() || '';
+        if (kamusJabatan === jabatan.trim().toLowerCase()) {
+          matchedKelas = cols[2]?.trim() || '';
+          matchedBeban = cols[3]?.trim() || '';
+          break;
+        }
+      }
+    }
+
+    if (matchedKelas || matchedBeban) {
+      if (matchedKelas) setValue('kelasJabatan', matchedKelas, { shouldDirty: true });
+      if (matchedBeban) setValue('bebanKerja', matchedBeban, { shouldDirty: true });
+    }
+  }, [jabatan, settings?.jabatanKamusCsv, setValue]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">

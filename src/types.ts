@@ -63,4 +63,5 @@ export interface AppSettings {
   kopLine3?: string;
   kopLine4?: string;
   logoBase64?: string;
+  jabatanKamusCsv?: string;
 }

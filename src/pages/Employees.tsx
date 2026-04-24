@@ -9,8 +9,10 @@ import * as XLSX from 'xlsx';
 import { handleFirestoreError, OperationType } from '../lib/error';
 import { extractEmployeeData, extractEmployeeDataFromText, mapExcelColumnsWithAI } from '../services/geminiService';
 
+import { DEFAULT_KAMUS } from '../constants';
+
 export default function Employees() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [rawEmployees, setRawEmployees] = useState<Employee[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,9 +23,35 @@ export default function Employees() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
-  
-  // Print States
-  // Removed print states as they are now handled in the Print page
+
+  const employees = React.useMemo(() => {
+    const kamusMap = new Map<string, {kelas: string, beban: string}>();
+    const csvData = settings?.jabatanKamusCsv || DEFAULT_KAMUS;
+    if (csvData) {
+      const rows = csvData.split('\n');
+      for (const row of rows) {
+        if (!row || row.trim() === '') continue;
+        const cols = row.split(/;|\t/);
+        if (cols.length >= 4) {
+          kamusMap.set(cols[1].trim().toLowerCase(), {
+            kelas: cols[2].trim(),
+            beban: cols[3].trim()
+          });
+        }
+      }
+    }
+
+    return rawEmployees.map(emp => {
+      let overrides = {};
+      if (emp.jabatan && kamusMap.size > 0) {
+        const match = kamusMap.get(emp.jabatan.trim().toLowerCase());
+        if (match) {
+          overrides = { kelasJabatan: match.kelas, bebanKerja: match.beban };
+        }
+      }
+      return { ...emp, ...overrides };
+    });
+  }, [rawEmployees, settings?.jabatanKamusCsv]);
 
   useEffect(() => {
     // Fetch Settings
@@ -87,7 +115,7 @@ export default function Employees() {
           bidang: d.bidang || '',
         };
       }) as Employee[];
-      setEmployees(data);
+      setRawEmployees(data);
     }, (err) => {
       try {
         handleFirestoreError(err, OperationType.GET, 'shared/data/employees');
@@ -252,7 +280,7 @@ export default function Employees() {
       "Gaji Pokok", "Besaran Gaji Kotor", "Jabatan", "Bidang", "Status",
       "Nomor Karpeg", "Pendidikan", "Jurusan", "Diklat Jenjang", "Tahun Diklat",
       "Status Kawin", "Agama", "Nomor HP", "Sisa Cuti Tahunan N", "Sisa Cuti Tahunan N1",
-      "Sisa Cuti Tahunan N2", "SK Terakhir Yang Dimiliki",
+      "Sisa Cuti Tahunan N2", "Atasan Langsung", "NIP Atasan Langsung", "Pejabat Wewenang", "NIP Pejabat Wewenang", "SK Terakhir Yang Dimiliki",
       "Nama Istri/Suami", "Tanggal Lahir Pasangan", "Perkawinan Pasangan", "Pekerjaan Pasangan", "Keterangan Pasangan",
       "Nama Anak 1", "Tanggal Lahir Anak 1", "Perkawinan Anak 1", "Pekerjaan Anak 1", "Keterangan Anak 1",
       "Nama Anak 2", "Tanggal Lahir Anak 2", "Perkawinan Anak 2", "Pekerjaan Anak 2", "Keterangan Anak 2",
@@ -271,7 +299,7 @@ export default function Employees() {
         "4.672.800", "7.236.979", "Kepala Dinas", "Sekretariat", "PNS",
         "L.066441", "S2", "Ilmu Pemerintahan", "PIM II", "2020",
         "Kawin", "Islam", "081252748226", "12", "0", "0",
-        "Akhmad Helmi Luqman", "197001011990011001", "Muhammad Fawait", "197501011995011001", "SK Bupati No. 123",
+        "Bupati Jember", "-", "Sekda Jember", "-", "SK Bupati No. 123",
         "Nama Pasangan", "1985-01-01", "2010-01-01", "Wiraswasta", "Aktif",
         "Anak Pertama", "2012-05-10", "-", "Sekolah", "Tertanggung",
         "Anak Kedua", "2017-08-20", "-", "Belum Sekolah", "Tertanggung",
@@ -302,8 +330,19 @@ export default function Employees() {
         
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as any[][];
         let successCount = 0;
+        let updateCount = 0;
 
         if (rows.length === 0) throw new Error("File Excel kosong.");
+
+        // Load existing employees for upsert logic (prevent duplicates)
+        const existingSnapshot = await getDocs(collection(db, 'shared/data/employees'));
+        const nipMap: Record<string, string> = {};
+        const nikMap: Record<string, string> = {};
+        existingSnapshot.docs.forEach(d => {
+          const data = d.data();
+          if (data.nip) nipMap[String(data.nip).trim()] = d.id;
+          if (data.nik) nikMap[String(data.nik).trim()] = d.id;
+        });
 
         // Find header row and create mapping
         let headerIdx = -1;
@@ -442,15 +481,40 @@ export default function Employees() {
               dataKeluarga,
             };
 
-            const docRef = doc(collection(db, 'shared/data/employees'));
+            // Apply Kamus Auto-fill during import if empty
+            if (settings?.jabatanKamusCsv && employeeData.jabatan) {
+              const rows = settings.jabatanKamusCsv.split('\n');
+              for (const kamusRow of rows) {
+                if (!kamusRow || kamusRow.trim() === '') continue;
+                const cols = kamusRow.split(/;|\t/);
+                if (cols.length >= 4) {
+                  const kamusJabatan = cols[1]?.trim().toLowerCase() || '';
+                  if (kamusJabatan === employeeData.jabatan.toLowerCase()) {
+                    if (!employeeData.kelasJabatan) employeeData.kelasJabatan = cols[2]?.trim() || '';
+                    if (!employeeData.bebanKerja) employeeData.bebanKerja = cols[3]?.trim() || '';
+                    break;
+                  }
+                }
+              }
+            }
+
+            let existingId = null;
+            if (nip && nipMap[nip]) existingId = nipMap[nip];
+            else if (nik && nikMap[nik]) existingId = nikMap[nik];
+
+            const docRef = existingId 
+              ? doc(db, 'shared/data/employees', existingId)
+              : doc(collection(db, 'shared/data/employees'));
+
             batch.set(docRef, {
               ...employeeData,
-              createdAt: Date.now(),
+              ...(existingId ? {} : { createdAt: Date.now() }),
               updatedAt: Date.now()
-            });
+            }, { merge: true });
             
             batchCount++;
-            successCount++;
+            if (existingId) updateCount++;
+            else successCount++;
 
             if (batchCount >= 400) {
               await batch.commit();
@@ -484,8 +548,6 @@ export default function Employees() {
 
             const employeeData: any = {
               dataKeluarga: [],
-              createdAt: Date.now(),
-              updatedAt: Date.now()
             };
 
             rawHeaders.forEach((header, idx) => {
@@ -495,11 +557,45 @@ export default function Employees() {
               }
             });
 
-            if (employeeData.nama || employeeData.nik || employeeData.nip) {
-              const docRef = doc(collection(db, 'shared/data/employees'));
-              batch.set(docRef, employeeData);
+            const nipRaw = String(employeeData.nip || '').trim();
+            const nikRaw = String(employeeData.nik || '').trim();
+
+            if (employeeData.nama || nikRaw || nipRaw) {
+              
+              // Apply Kamus Auto-fill for AI Mapping as well
+              if (settings?.jabatanKamusCsv && employeeData.jabatan) {
+                const rows = settings.jabatanKamusCsv.split('\n');
+                for (const kamusRow of rows) {
+                  if (!kamusRow || kamusRow.trim() === '') continue;
+                  const cols = kamusRow.split(/;|\t/);
+                  if (cols.length >= 4) {
+                    const kamusJabatan = cols[1]?.trim().toLowerCase() || '';
+                    if (kamusJabatan === String(employeeData.jabatan).trim().toLowerCase()) {
+                      if (!employeeData.kelasJabatan) employeeData.kelasJabatan = cols[2]?.trim() || '';
+                      if (!employeeData.bebanKerja) employeeData.bebanKerja = cols[3]?.trim() || '';
+                      break;
+                    }
+                  }
+                }
+              }
+
+              let existingId = null;
+              if (nipRaw && nipMap[nipRaw]) existingId = nipMap[nipRaw];
+              else if (nikRaw && nikMap[nikRaw]) existingId = nikMap[nikRaw];
+
+              const docRef = existingId 
+                ? doc(db, 'shared/data/employees', existingId)
+                : doc(collection(db, 'shared/data/employees'));
+
+              batch.set(docRef, {
+                ...employeeData,
+                ...(existingId ? {} : { createdAt: Date.now() }),
+                updatedAt: Date.now()
+              }, { merge: true });
+
               batchCount++;
-              successCount++;
+              if (existingId) updateCount++;
+              else successCount++;
 
               if (batchCount >= 400) {
                 await batch.commit();
@@ -514,7 +610,7 @@ export default function Employees() {
           }
         }
         
-        alert(`Import selesai! Berhasil mengimpor ${successCount} data pegawai.`);
+        alert(`Import selesai! Berhasil menambah ${successCount} data baru, dan memperbarui/melengkapi ${updateCount} data lama.`);
       } catch (err) {
         console.error("Import error:", err);
         alert("Gagal mengimport data. Pastikan format file benar.");
@@ -922,6 +1018,7 @@ export default function Employees() {
       >
         <EmployeeForm 
           initialData={editingEmployee} 
+          settings={settings}
           onSubmit={handleSave} 
           onCancel={() => setIsModalOpen(false)} 
         />

@@ -1,10 +1,36 @@
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Users, UserCheck, UserMinus, Briefcase, PieChart as PieChartIcon } from 'lucide-react';
+import { Users, UserCheck, UserMinus, Briefcase, PieChart as PieChartIcon, Clock, AlertCircle, TrendingUp, ChevronDown, ChevronUp, Award } from 'lucide-react';
 import { handleFirestoreError, OperationType } from '../lib/error';
 import { cn } from '../lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { Employee } from '../types';
+
+interface KgbInfo {
+  id: string;
+  nama: string;
+  nip: string;
+  status: string;
+  golongan: string;
+  nextDate: Date;
+  diffDays: number;
+  isOverdue: boolean;
+  baselineDate: Date;
+  isFirst: boolean;
+}
+
+interface KpInfo {
+  id: string;
+  nama: string;
+  nip: string;
+  status: string;
+  golongan: string;
+  nextDate: Date;
+  diffDays: number;
+  isOverdue: boolean;
+  baselineDate: Date;
+}
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -15,7 +41,119 @@ export default function Dashboard() {
     pppkpw: 0
   });
   const [bidangStats, setBidangStats] = useState<{ name: string; value: number }[]>([]);
+  const [kgbList, setKgbList] = useState<KgbInfo[]>([]);
+  const [showAllKgb, setShowAllKgb] = useState(false);
+  const [kpList, setKpList] = useState<KpInfo[]>([]);
+  const [showAllKp, setShowAllKp] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  const calculateKgbList = (employees: Employee[]): KgbInfo[] => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const list: KgbInfo[] = [];
+
+    employees.forEach(emp => {
+      let baselineDate: Date | null = null;
+      let isFirst = false;
+
+      if (emp.tanggalBerkalaTerakhir) {
+        baselineDate = new Date(emp.tanggalBerkalaTerakhir);
+      } else {
+        const rawDate = emp.tmtKerja || emp.tmtGolonganRuang;
+        if (rawDate) {
+          baselineDate = new Date(rawDate);
+          isFirst = true;
+        }
+      }
+
+      if (!baselineDate || isNaN(baselineDate.getTime())) return;
+
+      const nextDate = new Date(baselineDate);
+      const status = emp.status || '';
+      const golRaw = (emp.gol || emp.pangkatGolongan || '').toUpperCase().replace(/\s/g, '');
+
+      // Rule: PNS Gol II/a first time is 1 year
+      const isPnsIIa = status === 'PNS' && (golRaw.includes('II/A') || golRaw.includes('II.A') || golRaw === 'IIA');
+      // Rule: PPPK Gol 5 first time is 1 year
+      const isPppk5 = status === 'PPPK' && (golRaw === 'V' || golRaw === '5' || golRaw.includes('/V') || golRaw.includes('.V'));
+
+      if (isFirst && (isPnsIIa || isPppk5)) {
+        nextDate.setFullYear(nextDate.getFullYear() + 1);
+      } else {
+        nextDate.setFullYear(nextDate.getFullYear() + 2);
+      }
+
+      const diffTime = nextDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      list.push({
+        id: emp.id || emp.nik,
+        nama: emp.nama,
+        nip: emp.nip,
+        status: status,
+        golongan: emp.pangkatGolongan || emp.gol || '-',
+        nextDate,
+        diffDays,
+        isOverdue: diffDays < 0,
+        baselineDate,
+        isFirst
+      });
+    });
+
+    list.sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
+    return list;
+  };
+
+  const formatRelativeTime = (diffDays: number) => {
+    if (diffDays === 0) return 'Hari ini';
+    if (diffDays < 0) {
+      const abs = Math.abs(diffDays);
+      if (abs > 365) return `Lewat ${Math.floor(abs / 365)} tahun`;
+      if (abs > 30) return `Lewat ${Math.floor(abs / 30)} bulan`;
+      return `Lewat ${abs} hari`;
+    }
+    if (diffDays > 365) return `Dalam ${Math.floor(diffDays / 365)} tahun, ${Math.floor((diffDays % 365)/30)} bln`;
+    if (diffDays > 30) return `Dalam ${Math.floor(diffDays / 30)} bulan, ${diffDays % 30} hr`;
+    return `Dalam ${diffDays} hari`;
+  };
+
+  const calculateKpList = (employees: Employee[]): KpInfo[] => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const list: KpInfo[] = [];
+
+    employees.forEach(emp => {
+      // Hanya menghitung bagi yang berstatus PNS atau CPNS pada umumnya, 
+      // tetapi untuk lebih aman kita hitung jika memiliki tmtGolonganRuang.
+      if (!emp.tmtGolonganRuang) return;
+
+      const baselineDate = new Date(emp.tmtGolonganRuang);
+      if (isNaN(baselineDate.getTime())) return;
+
+      const nextDate = new Date(baselineDate);
+      nextDate.setFullYear(nextDate.getFullYear() + 4); // 4 tahun kenaikan pangkat
+
+      const diffTime = nextDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      list.push({
+        id: emp.id || emp.nik,
+        nama: emp.nama,
+        nip: emp.nip,
+        status: (emp.status || ''),
+        golongan: emp.pangkatGolongan || emp.gol || '-',
+        nextDate,
+        diffDays,
+        isOverdue: diffDays < 0,
+        baselineDate,
+      });
+    });
+
+    list.sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
+    return list;
+  };
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'shared/data/employees'), (snapshot) => {
@@ -24,9 +162,12 @@ export default function Dashboard() {
       let pppk = 0;
       let pppkpw = 0;
       const bidangMap: Record<string, number> = {};
+      const employeesData: Employee[] = [];
 
       snapshot.docs.forEach(doc => {
-        const data = doc.data();
+        const data = doc.data() as Employee;
+        employeesData.push({ ...data, id: doc.id });
+
         if (data.status === 'PNS') pns++;
         else if (data.status === 'CPNS') cpns++;
         else if (data.status === 'PPPK') pppk++;
@@ -48,6 +189,10 @@ export default function Dashboard() {
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
       setBidangStats(bidangData);
+
+      setKgbList(calculateKgbList(employeesData));
+      setKpList(calculateKpList(employeesData));
+
     }, (err) => {
       try {
         handleFirestoreError(err, OperationType.GET, 'shared/data/employees');
@@ -71,6 +216,8 @@ export default function Dashboard() {
   ];
 
   const COLORS = ['#0f172a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0'];
+  const displayedKgb = showAllKgb ? kgbList : kgbList.slice(0, 5);
+  const displayedKp = showAllKp ? kpList : kpList.slice(0, 5);
 
   return (
     <div className="space-y-10 max-w-[1200px] mx-auto pb-12">
@@ -184,6 +331,184 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* KGB Countdown Section */}
+      <div className="space-y-4 pt-6 mt-6 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-sm border-l-2 pl-3 border-sky-500 font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-sky-500" />
+              Notifikasi Kenaikan Gaji Berkala (KGB)
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar abdi negara dengan jadwal KGB terdekat berdasar MKG dan status pangkat.</p>
+          </div>
+          {kgbList.length > 5 && (
+            <button 
+              onClick={() => setShowAllKgb(!showAllKgb)}
+              className="text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg px-4 py-2 flex items-center justify-center gap-2 transition-colors"
+            >
+              {showAllKgb ? (
+                <><ChevronUp className="w-4 h-4" /> Tutup Daftar Lengkap</>
+              ) : (
+                <><ChevronDown className="w-4 h-4" /> Lihat Semua ({kgbList.length})</>
+              )}
+            </button>
+          )}
+        </div>
+
+        <div className="bg-white border border-slate-100 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[13px] whitespace-nowrap">
+              <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] tracking-widest font-bold text-slate-500">
+                <tr>
+                  <th className="px-6 py-4">Nama / NIP</th>
+                  <th className="px-6 py-4">Status & Golongan</th>
+                  <th className="px-6 py-4 text-center">SK Terakhir / TMT</th>
+                  <th className="px-6 py-4 text-center">Jadwal KGB Berikutnya</th>
+                  <th className="px-6 py-4 text-right">Hitung Mundur</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {displayedKgb.map((kgb) => (
+                  <tr key={kgb.id} className="hover:bg-sky-50/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-slate-800">{kgb.nama}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{kgb.nip || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
+                        {kgb.status}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">{kgb.golongan}</div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="text-slate-700 font-medium">
+                        {kgb.baselineDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1">
+                        {kgb.isFirst ? '(TMT Kerja)' : '(SK Terakhir)'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className={cn("font-bold", kgb.isOverdue ? "text-rose-600" : "text-slate-900")}>
+                        {kgb.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold",
+                        kgb.isOverdue 
+                          ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
+                          : kgb.diffDays <= 30
+                            ? "bg-amber-50 text-amber-700 border border-amber-100/50"
+                            : "bg-emerald-50 text-emerald-700 border border-emerald-100/50"
+                      )}>
+                        {kgb.isOverdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                        {formatRelativeTime(kgb.diffDays)}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {displayedKgb.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
+                      Tidak ada data yang valid untuk kalkulasi KGB.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Kenaikan Pangkat (KP) Countdown Section */}
+      <div className="space-y-4 pt-6 mt-6 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-sm border-l-2 pl-3 border-emerald-500 font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+              <Award className="w-4 h-4 text-emerald-500" />
+              Notifikasi Kenaikan Pangkat (KP)
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar abdi negara dengan jadwal Kenaikan Pangkat terdekat (4 tahun dari SK Terakhir).</p>
+          </div>
+          {kpList.length > 5 && (
+            <button 
+              onClick={() => setShowAllKp(!showAllKp)}
+              className="text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg px-4 py-2 flex items-center justify-center gap-2 transition-colors"
+            >
+              {showAllKp ? (
+                <><ChevronUp className="w-4 h-4" /> Tutup Daftar Lengkap</>
+              ) : (
+                <><ChevronDown className="w-4 h-4" /> Lihat Semua ({kpList.length})</>
+              )}
+            </button>
+          )}
+        </div>
+
+        <div className="bg-white border border-slate-100 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-[13px] whitespace-nowrap">
+              <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] tracking-widest font-bold text-slate-500">
+                <tr>
+                  <th className="px-6 py-4">Nama / NIP</th>
+                  <th className="px-6 py-4">Status & Golongan</th>
+                  <th className="px-6 py-4 text-center">TMT Golongan Ruang</th>
+                  <th className="px-6 py-4 text-center">Jadwal KP Berikutnya</th>
+                  <th className="px-6 py-4 text-right">Hitung Mundur</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {displayedKp.map((kp) => (
+                  <tr key={kp.id} className="hover:bg-emerald-50/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-slate-800">{kp.nama}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{kp.nip || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
+                        {kp.status}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">{kp.golongan}</div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className="text-slate-700 font-medium">
+                        {kp.baselineDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <div className={cn("font-bold", kp.isOverdue ? "text-rose-600" : "text-slate-900")}>
+                        {kp.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold",
+                        kp.isOverdue 
+                          ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
+                          : kp.diffDays <= 90
+                            ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning kalau sisa < 3 bln
+                            : "bg-emerald-50 text-emerald-700 border border-emerald-100/50"
+                      )}>
+                        {kp.isOverdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                        {formatRelativeTime(kp.diffDays)}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {displayedKp.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
+                      Tidak ada data yang valid untuk kalkulasi Kenaikan Pangkat.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
