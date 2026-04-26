@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { cn } from '../lib/utils';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
+import { AnimatePresence, motion } from 'motion/react';
 
 export default function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -11,11 +12,11 @@ export default function Layout() {
   const location = useLocation();
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Master Data Pegawai', href: '/employees', icon: Users },
-    { name: 'Cetak', href: '/print', icon: Printer },
-    { name: 'Pengaturan', href: '/settings', icon: Settings },
-    { name: 'Chat', href: '/chat', icon: MessageSquare },
+    { name: 'Dasbor', href: '/', icon: LayoutDashboard },
+    { name: 'Direktori Pegawai', href: '/employees', icon: Users },
+    { name: 'Pencetakan Dokumen', href: '/print', icon: Printer },
+    { name: 'Pengaturan Sistem', href: '/settings', icon: Settings },
+    { name: 'Pusat Komunikasi', href: '/chat', icon: MessageSquare },
   ];
 
   return (
@@ -129,7 +130,18 @@ export default function Layout() {
         </header>
 
         <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 p-0 sm:p-4 md:p-8 lg:p-10 print:block print:overflow-visible print:p-0">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* BOTTOM NAV (Mobile Only) - Simplified */}
@@ -146,7 +158,7 @@ export default function Layout() {
                 )}
               >
                 <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5]")} />
-                <span className="text-[9px] font-bold uppercase tracking-wider">{item.name === 'Master Data Pegawai' ? 'Data' : item.name}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider">{item.name === 'Direktori Pegawai' ? 'Pegawai' : item.name === 'Pencetakan Dokumen' ? 'Cetak' : item.name === 'Pengaturan Sistem' ? 'Sistem' : item.name.split(' ')[0]}</span>
               </Link>
             );
           })}

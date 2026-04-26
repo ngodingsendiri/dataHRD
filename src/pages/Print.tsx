@@ -4,7 +4,8 @@ import { db } from '../lib/firebase';
 import { Employee, AppSettings } from '../types';
 import { Printer, Settings, Users, FileText, ChevronDown } from 'lucide-react';
 
-type PrintType = 'absen_global' | 'absen_bidang' | 'tanda_terima';
+type PrintType = 'absen_global' | 'absen_bidang' | 'tanda_terima' | 'surat_cuti' | 'anjab' | 'model_dk' | 'duk' | 'bezetting' | 'usulan_kgb' | 'usulan_kp';
+type SortAction = 'default_kelas' | 'abjad';
 
 export default function Print() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -16,6 +17,7 @@ export default function Print() {
   const [customTitle, setCustomTitle] = useState('DAFTAR HADIR / ABSENSI');
   const [customSubtitle, setCustomSubtitle] = useState('KEGIATAN: .......................................');
   const [selectedBidang, setSelectedBidang] = useState<string>('Semua');
+  const [sortOption, setSortOption] = useState<SortAction>('default_kelas');
 
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -24,15 +26,41 @@ export default function Print() {
       try {
         // Fetch Settings
         const settingsDoc = await getDoc(doc(db, 'shared/data/settings/app'));
+        let currentSettings: AppSettings | null = null;
         if (settingsDoc.exists()) {
-          setSettings(settingsDoc.data() as AppSettings);
+          currentSettings = settingsDoc.data() as AppSettings;
+          setSettings(currentSettings);
         }
 
         // Fetch Employees
         const empSnapshot = await getDocs(collection(db, 'shared/data/employees'));
-        const empData = empSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
-        // Sort by PangkatGolongan implicitly or by Name
-        empData.sort((a, b) => (a.nama || '').localeCompare(b.nama || ''));
+        let empData = empSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+        
+        // Apply Kamus Jabatan Overrides dynamically
+        if (currentSettings?.jabatanKamusCsv) {
+          const kamusMap = new Map<string, {kelas: string, beban: string}>();
+          const rows = currentSettings.jabatanKamusCsv.split('\n');
+          for (let i = 1; i < rows.length; i++) {
+            const kamusRow = rows[i];
+            if (!kamusRow || kamusRow.trim() === '') continue;
+            const cols = kamusRow.split(/;|\t/);
+            if (cols.length >= 4) {
+              kamusMap.set(cols[1].trim().toLowerCase(), { 
+                kelas: cols[2].trim(), 
+                beban: cols[3].trim() 
+              });
+            }
+          }
+          
+          empData = empData.map(emp => {
+            if (emp.jabatan && kamusMap.has(emp.jabatan.trim().toLowerCase())) {
+              const match = kamusMap.get(emp.jabatan.trim().toLowerCase())!;
+              return { ...emp, kelasJabatan: match.kelas, bebanKerja: match.beban };
+            }
+            return emp;
+          });
+        }
+
         setEmployees(empData);
       } catch (err) {
         console.error("Error fetching data for print:", err);
@@ -59,8 +87,40 @@ export default function Print() {
     return true;
   });
 
+  const sortedEmployees = [...filteredEmployees].sort((a, b) => {
+    if (sortOption === 'abjad') {
+      return (a.nama || '').localeCompare(b.nama || '');
+    } else {
+      // Status
+      const statusOrder: Record<string, number> = {
+        'PNS': 1,
+        'CPNS': 2,
+        'PPPK': 3,
+        'PPPKPW': 4,
+        'Lainnya': 5
+      };
+      
+      const statusA = statusOrder[a.status || ''] || 99;
+      const statusB = statusOrder[b.status || ''] || 99;
+      
+      if (statusA !== statusB) {
+        return statusA - statusB;
+      }
+
+      // Kelas Jabatan (DESC)
+      const kelasA = parseInt(a.kelasJabatan || '0', 10);
+      const kelasB = parseInt(b.kelasJabatan || '0', 10);
+      if (kelasB !== kelasA) {
+        return kelasB - kelasA;
+      }
+      
+      // Fallback
+      return (a.nama || '').localeCompare(b.nama || '');
+    }
+  });
+
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Memuat data cetak...</div>;
+    return <div className="flex justify-center items-center h-64 font-medium text-slate-500 text-sm">Menginisialisasi data formulir cetak...</div>;
   }
 
   const toProperCase = (str: string) => {
@@ -80,8 +140,8 @@ export default function Print() {
       <div className="print-hidden space-y-4 md:space-y-6">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-100 pb-4 md:pb-6">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">Pusat Cetak Dokumen</h1>
-            <p className="mt-1 text-sm text-slate-500">Sesuaikan konteks tabel dan pratinjau sebelum mencetak dokumen absensi atau daftar tanda terima.</p>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">Pusat Pencetakan Dokumen</h1>
+            <p className="mt-1 text-sm text-slate-500">Konfigurasi spesifikasi dan pratinjau tabel sebelum melakukan pencetakan dokumen administratif.</p>
           </div>
           <button 
             onClick={() => {
@@ -106,9 +166,9 @@ export default function Print() {
           <p>Bila tombol cetak tidak berfungsi di mode pratinjau ini, silakan tekan <strong>Ctrl+P</strong> (Windows) atau <strong>Cmd+P</strong> (Mac) langsung pada keyboard Anda.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200">
           <div className="space-y-2">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jenis Dokumen</label>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Klasifikasi Dokumen</label>
             <select 
               className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
               value={printType}
@@ -116,25 +176,39 @@ export default function Print() {
                 const type = e.target.value as PrintType;
                 setPrintType(type);
                 if (type === 'absen_global') setCustomTitle('DAFTAR HADIR / ABSENSI PEGAWAI');
-                if (type === 'absen_bidang') setCustomTitle(`DAFTAR HADIR BIDANG ${selectedBidang === 'Semua' ? '...' : selectedBidang.toUpperCase()}`);
+                if (type === 'absen_bidang') setCustomTitle(`DAFTAR HADIR UNIT KERJA ${selectedBidang === 'Semua' ? '...' : selectedBidang.toUpperCase()}`);
                 if (type === 'tanda_terima') setCustomTitle('DAFTAR TANDA TERIMA ......................');
+                if (type === 'surat_cuti') setCustomTitle('SURAT IZIN CUTI PEGAWAI');
+                if (type === 'anjab') setCustomTitle('DOKUMEN ANALISIS JABATAN (ANJAB)');
+                if (type === 'model_dk') setCustomTitle('DAFTAR KELUARGA (MODEL DK)');
+                if (type === 'duk') setCustomTitle('DAFTAR URUT KEPANGKATAN (DUK)');
+                if (type === 'bezetting') setCustomTitle('DAFTAR SUSUNAN BEZETTING PEGAWAI');
+                if (type === 'usulan_kgb') setCustomTitle('USULAN KENAIKAN GAJI BERKALA (KGB)');
+                if (type === 'usulan_kp') setCustomTitle('USULAN KENAIKAN PANGKAT (KP)');
               }}
             >
-              <option value="absen_global">Absensi Global (Semua Pegawai)</option>
-              <option value="absen_bidang">Absensi Per-Bidang / Unit Kerja</option>
-              <option value="tanda_terima">Lembar Tanda Terima</option>
+              <option value="absen_global">Daftar Hadir Global (Keseluruhan)</option>
+              <option value="absen_bidang">Daftar Hadir Per Unit Kerja</option>
+              <option value="tanda_terima">Dokumen Tanda Terima</option>
+              <option value="surat_cuti">Surat Cuti (Segera Hadir)</option>
+              <option value="anjab">Cetak ANJAB (Segera Hadir)</option>
+              <option value="model_dk">Cetak Model DK (Segera Hadir)</option>
+              <option value="duk">Daftar Urut Kepangkatan - DUK (Segera Hadir)</option>
+              <option value="bezetting">Susunan Formasi Bezetting (Segera Hadir)</option>
+              <option value="usulan_kgb">Usulan KGB (Segera Hadir)</option>
+              <option value="usulan_kp">Usulan KP (Segera Hadir)</option>
             </select>
           </div>
 
           {printType === 'absen_bidang' && (
             <div className="space-y-2">
-              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pilih Bidang</label>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Filter Unit Kerja</label>
               <select 
                 className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
                 value={selectedBidang}
                 onChange={(e) => {
                   setSelectedBidang(e.target.value);
-                  setCustomTitle(`DAFTAR HADIR BIDANG ${e.target.value.toUpperCase()}`);
+                  setCustomTitle(`DAFTAR HADIR UNIT KERJA ${e.target.value.toUpperCase()}`);
                 }}
               >
                 <option value="Semua">Semua / Pilih Filter...</option>
@@ -143,8 +217,20 @@ export default function Print() {
             </div>
           )}
 
-          <div className="space-y-2 md:col-span-2">
-            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Judul / Konteks Dokumen (Bisa Diedit)</label>
+          <div className="space-y-2">
+             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Metode Pengurutan</label>
+             <select 
+              className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value as SortAction)}
+            >
+              <option value="default_kelas">Hierarki (Kelas Jabatan, Status)</option>
+              <option value="abjad">Alfabetis (A-Z)</option>
+            </select>
+          </div>
+
+          <div className={`space-y-2 ${printType === 'absen_bidang' ? 'md:col-span-1 lg:col-span-2' : 'md:col-span-2 lg:col-span-3'}`}>
+            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Judul Utama Dokumen</label>
             <input 
               type="text" 
               className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
@@ -153,8 +239,8 @@ export default function Print() {
             />
           </div>
           
-          <div className="space-y-2 md:col-span-4">
-             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sub-judul / Keterangan (Opsional)</label>
+          <div className="space-y-2 md:col-span-4 lg:col-span-5">
+             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Informasi Tambahan / Keterangan Dokumen</label>
              <input 
               type="text" 
               className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
@@ -168,7 +254,7 @@ export default function Print() {
       {/* Preview Section */}
       <div className="bg-slate-100 p-4 sm:p-8 rounded-xl border border-slate-200 overflow-x-auto print:p-0 print:bg-transparent print:border-none print:shadow-none print:-mx-4 print:overflow-visible flex flex-col items-center">
         <div className="text-center mb-6 text-xs sm:text-sm font-bold text-slate-400 tracking-widest uppercase print:hidden w-full">
-          — Area Pratinjau Cetak —
+          — Mode Pratinjau Cetak —
         </div>
         
         {/* Actual Print Paper Container */}
@@ -204,45 +290,55 @@ export default function Print() {
             {customSubtitle && <p className="text-[12pt] font-bold">{customSubtitle}</p>}
           </div>
 
-          {/* MAIN TABLE */}
-          <table className="w-full border-collapse mb-10 text-[12pt] leading-tight">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-black px-2 py-1 w-10 text-center font-bold align-middle">NO</th>
-                <th className="border border-black px-2 py-1 text-center font-bold align-middle">NAMA PEGAWAI</th>
-                <th className="border border-black px-2 py-1 w-10 text-center font-bold align-middle">JK</th>
-                <th className="border border-black px-2 py-1 w-44 text-center font-bold align-middle">NIP</th>
-                <th className="border border-black px-2 py-1 w-40 font-bold text-center align-middle">{printType === 'tanda_terima' ? 'TANDA TERIMA' : 'TANDA TANGAN'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEmployees.map((emp, idx) => (
-                <tr key={emp.id || idx} className="h-8">
-                  <td className="border border-black px-2 py-1 text-center align-middle">{idx + 1}</td>
-                  <td className="border border-black px-3 py-1 align-middle">
-                    <div className="text-[11pt] leading-none">{emp.nama}</div>
-                  </td>
-                  <td className="border border-black px-1 py-1 text-center align-middle text-[11pt]">{emp.jk || '-'}</td>
-                  <td className="border border-black px-2 py-1 align-middle text-center">
-                    <div className="text-[11pt] leading-none">{emp.nip || '-'}</div>
-                  </td>
-                  <td className="border border-black px-2 py-1 align-middle">
-                    {/* Odd rows left aligned, Even rows indented slightly space for TTD */}
-                    <div className={`text-[11pt] font-semibold ${idx % 2 === 0 ? 'text-left pl-1' : 'text-left pl-10'}`}>
-                      {idx + 1}.
-                    </div>
-                  </td>
+          {/* MAIN DOCUMENT BODY */}
+          {printType === 'absen_global' || printType === 'absen_bidang' || printType === 'tanda_terima' ? (
+            <table className="w-full border-collapse mb-10 text-[12pt] leading-tight">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-black px-2 py-1 w-10 text-center font-bold align-middle">NO</th>
+                  <th className="border border-black px-2 py-1 text-center font-bold align-middle">NAMA PEGAWAI</th>
+                  <th className="border border-black px-2 py-1 w-10 text-center font-bold align-middle">JK</th>
+                  <th className="border border-black px-2 py-1 w-44 text-center font-bold align-middle">NIP</th>
+                  <th className="border border-black px-2 py-1 w-40 font-bold text-center align-middle">{printType === 'tanda_terima' ? 'TANDA TERIMA' : 'TANDA TANGAN'}</th>
                 </tr>
-              ))}
-              {filteredEmployees.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="border border-black px-4 py-6 text-center italic text-gray-500 text-[12pt]">
-                    Tidak ada data pegawai yang sesuai untuk dicetak.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedEmployees.map((emp, idx) => (
+                  <tr key={emp.id || idx} className="h-8">
+                    <td className="border border-black px-2 py-1 text-center align-middle">{idx + 1}</td>
+                    <td className="border border-black px-3 py-1 align-middle">
+                      <div className="text-[11pt] leading-none">{emp.nama}</div>
+                    </td>
+                    <td className="border border-black px-1 py-1 text-center align-middle text-[11pt]">{emp.jk || '-'}</td>
+                    <td className="border border-black px-2 py-1 align-middle text-center">
+                      <div className="text-[11pt] leading-none">{emp.nip || '-'}</div>
+                    </td>
+                    <td className="border border-black px-2 py-1 align-middle">
+                      {/* Odd rows left aligned, Even rows indented slightly space for TTD */}
+                      <div className={`text-[11pt] font-semibold ${idx % 2 === 0 ? 'text-left pl-1' : 'text-left pl-10'}`}>
+                        {idx + 1}.
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {sortedEmployees.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="border border-black px-4 py-6 text-center italic text-gray-500 text-[12pt]">
+                      Tidak ada data pegawai yang sesuai untuk dicetak.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          ) : (
+            <div className="py-20 text-center border-2 border-dashed border-slate-300 rounded-xl mb-10 print-hidden">
+              <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-slate-500">Modul Cetak Belum Tersedia</h3>
+              <p className="text-slate-400 max-w-md mx-auto mt-2">
+                Modul untuk mencetak <strong>{customTitle}</strong> saat ini sedang dalam tahap pengembangan (WIP) dan belum dapat digunakan.
+              </p>
+            </div>
+          )}
 
           {/* SIGNATURE SECTION */}
           <div className="flex justify-end mt-12 pr-8 page-break-inside-avoid">

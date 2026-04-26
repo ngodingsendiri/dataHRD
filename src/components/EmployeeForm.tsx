@@ -66,7 +66,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {/* Section 1: Identitas Pribadi */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Identitas Pribadi</h3>
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Data Diri Aparatur</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">NIP</label>
@@ -77,7 +77,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
             <input {...register('nik', { required: true })} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Nama Lengkap *</label>
+            <label className="text-sm font-medium text-slate-700">Nama Lengkap (Sesuai KTP) *</label>
             <input {...register('nama', { required: true })} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
           </div>
           <div className="space-y-1.5">
@@ -88,7 +88,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
             </select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Tempat Lahir</label>
+            <label className="text-sm font-medium text-slate-700">Kota / Kab. Kelahiran</label>
             <input {...register('tempatLahir')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
           </div>
           <div className="space-y-1.5">
@@ -112,10 +112,10 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
 
       {/* Section 2: Alamat */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Alamat Domisili</h3>
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Informasi Alamat & Domisili</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="space-y-1.5 md:col-span-2">
-            <label className="text-sm font-medium text-slate-700">Jalan / Dusun</label>
+            <label className="text-sm font-medium text-slate-700">Alamat Lengkap (Jalan/Dusun)</label>
             <input {...register('jalanDusun')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -145,10 +145,10 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
 
       {/* Section 3: Kepegawaian */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Data Kepegawaian</h3>
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Informasi Jabatan & Penempatan</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Status Pegawai</label>
+            <label className="text-sm font-medium text-slate-700">Status Hubungan Kerja</label>
             <select {...register('status')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all">
               <option value="PNS">PNS</option>
               <option value="PPPK">PPPK</option>
@@ -161,8 +161,16 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
             <input {...register('jabatan')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700">Bidang</label>
+            <label className="text-sm font-medium text-slate-700">Unit Kerja / Bidang</label>
             <input {...register('bidang')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Kelas Jabatan</label>
+            <input {...register('kelasJabatan')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all cursor-not-allowed text-slate-500" placeholder="Otomatis dari Kamus" readOnly />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-slate-700">Beban Kerja</label>
+            <input {...register('bebanKerja')} className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all cursor-not-allowed text-slate-500" placeholder="Otomatis dari Kamus" readOnly />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Pangkat</label>
@@ -205,7 +213,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
 
       {/* Section 4: Pendidikan & Diklat */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Pendidikan & Diklat</h3>
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Riwayat Pendidikan & Pelatihan</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Pendidikan Terakhir</label>
@@ -228,7 +236,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
 
       {/* Section 6: Lain-lain */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Informasi Tambahan</h3>
+        <h3 className="text-lg font-semibold text-slate-900 border-b border-slate-100 pb-2">Rekam Jejak & Administrasi</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Sisa Cuti N</label>
@@ -256,7 +264,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
       {/* Section 7: Data Keluarga */}
       <div className="border-t border-slate-100 pt-6 mt-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-slate-900">Data Keluarga</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Susunan Anggota Keluarga</h3>
           <button
             type="button"
             onClick={() => append({ name: '', relation: 'Istri', birthDate: '', marriageDate: '', occupation: '', description: '' })}
@@ -349,7 +357,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
           type="submit"
           className="px-6 py-2.5 text-sm font-medium text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all shadow-sm"
         >
-          Simpan Data Pegawai
+          Simpan Rekam Data
         </button>
       </div>
     </form>

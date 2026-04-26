@@ -6,6 +6,7 @@ import { handleFirestoreError, OperationType } from '../lib/error';
 import { cn } from '../lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { Employee } from '../types';
+import { motion } from 'motion/react';
 
 interface KgbInfo {
   id: string;
@@ -32,6 +33,23 @@ interface KpInfo {
   baselineDate: Date;
 }
 
+interface PensiunInfo {
+  id: string;
+  nama: string;
+  nip: string;
+  status: string;
+  golongan: string;
+  nextDate: Date; // Usia pensiun (misal 58 tahun dari tanggal lahir)
+  diffDays: number;
+  isOverdue: boolean;
+  tanggalLahir: string;
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+};
+
 export default function Dashboard() {
   const [stats, setStats] = useState({
     total: 0,
@@ -45,6 +63,8 @@ export default function Dashboard() {
   const [showAllKgb, setShowAllKgb] = useState(false);
   const [kpList, setKpList] = useState<KpInfo[]>([]);
   const [showAllKp, setShowAllKp] = useState(false);
+  const [pensiunList, setPensiunList] = useState<PensiunInfo[]>([]);
+  const [showAllPensiun, setShowAllPensiun] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const calculateKgbList = (employees: Employee[]): KgbInfo[] => {
@@ -155,6 +175,42 @@ export default function Dashboard() {
     return list;
   };
 
+  const calculatePensiunList = (employees: Employee[]): PensiunInfo[] => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const list: PensiunInfo[] = [];
+
+    employees.forEach(emp => {
+      if (!emp.tanggalLahir) return;
+
+      const baselineDate = new Date(emp.tanggalLahir);
+      if (isNaN(baselineDate.getTime())) return;
+
+      const nextDate = new Date(baselineDate);
+      // Asumsi BUP (Batas Usia Pensiun) standar 58 tahun
+      nextDate.setFullYear(nextDate.getFullYear() + 58);
+
+      const diffTime = nextDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      list.push({
+        id: emp.id || emp.nik,
+        nama: emp.nama,
+        nip: emp.nip,
+        status: (emp.status || ''),
+        golongan: emp.pangkatGolongan || emp.gol || '-',
+        nextDate,
+        diffDays,
+        isOverdue: diffDays < 0,
+        tanggalLahir: emp.tanggalLahir,
+      });
+    });
+
+    list.sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime());
+    return list;
+  };
+
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'shared/data/employees'), (snapshot) => {
       let pns = 0;
@@ -199,6 +255,7 @@ export default function Dashboard() {
 
       setKgbList(calculateKgbList(employeesData));
       setKpList(calculateKpList(employeesData));
+      setPensiunList(calculatePensiunList(employeesData));
 
     }, (err) => {
       try {
@@ -216,33 +273,49 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    { name: 'Total Pegawai', value: stats.total, icon: Users },
-    { name: 'Status PNS', value: stats.pns, icon: UserCheck },
-    { name: 'Pegawai PPPK', value: stats.pppk, icon: Briefcase },
-    { name: 'Unit Kerja', value: bidangStats.length, icon: PieChartIcon },
+    { name: 'Total Aparatur', value: stats.total, icon: Users },
+    { name: 'PNS Aktif', value: stats.pns, icon: UserCheck },
+    { name: 'PPPK Aktif', value: stats.pppk, icon: Briefcase },
+    { name: 'Penempatan Unit', value: bidangStats.length, icon: PieChartIcon },
   ];
 
   const COLORS = ['#0f172a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0'];
   const displayedKgb = showAllKgb ? kgbList : kgbList.slice(0, 5);
   const displayedKp = showAllKp ? kpList : kpList.slice(0, 5);
+  const displayedPensiun = showAllPensiun ? pensiunList : pensiunList.slice(0, 5);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
 
   return (
-    <div className="space-y-4 md:space-y-10 max-w-[1200px] mx-auto p-2 sm:p-0 pb-12">
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-4 md:space-y-10 max-w-[1200px] mx-auto p-2 sm:p-0 pb-12"
+    >
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4 md:pb-8">
+      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4 md:pb-8">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Dashboard Kepegawaian</h1>
-          <p className="text-sm text-slate-500 mt-1">Ringkasan data pegawai dan distribusi unit kerja secara real-time.</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Dasbor Kepegawaian</h1>
+          <p className="text-sm text-slate-500 mt-1">Ringkasan statistik kepegawaian dan alokasi penempatan secara seketika.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="h-9 px-4 bg-slate-900 text-white rounded text-[12px] font-semibold flex items-center justify-center cursor-default shadow-sm transition-all hover:bg-slate-800">
             {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Basic Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
         {statCards.map((item) => (
           <div key={item.name} className="bg-white border border-slate-100 p-3 sm:p-6 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-slate-300 transition-colors">
             <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3 text-slate-400">
@@ -254,7 +327,7 @@ export default function Dashboard() {
             </div>
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-start">
@@ -262,13 +335,13 @@ export default function Dashboard() {
         {/* Bidang Distribution Table-like List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Distribusi Pegawai Per Bidang</h2>
+            <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Distribusi Aparatur per Unit Kerja</h2>
           </div>
           <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.03)] text-[13px]">
             <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-500 uppercase text-[9px] sm:text-[10px] tracking-wider">
               <div className="col-span-1 hidden sm:block">No</div>
-              <div className="col-span-9 sm:col-span-8">Nama Bidang / Unit Kerja</div>
-              <div className="col-span-3 text-right">Jumlah Staf</div>
+              <div className="col-span-9 sm:col-span-8">Nomenklatur Unit Kerja</div>
+              <div className="col-span-3 text-right">Alokasi SDM</div>
             </div>
             <div className="divide-y divide-slate-50">
               {bidangStats.map((bidang, index) => (
@@ -294,7 +367,7 @@ export default function Dashboard() {
 
         {/* Chart Section */}
         <div className="space-y-4">
-          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Visualisasi Persentase</h2>
+          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Visualisasi Komposisi SDM</h2>
           <div className="bg-white border border-slate-100 rounded-lg p-3 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
             <div className="h-[220px] sm:h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -345,9 +418,9 @@ export default function Dashboard() {
           <div>
             <h2 className="text-sm border-l-2 pl-3 border-sky-500 font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-sky-500" />
-              Notifikasi Kenaikan Gaji Berkala (KGB)
+              Proyeksi Kenaikan Gaji Berkala (KGB)
             </h2>
-            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar abdi negara dengan jadwal KGB terdekat berdasar MKG dan status pangkat.</p>
+            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar aparatur dengan estimasi jadwal KGB berdasarkan riwayat masa kerja.</p>
           </div>
           {kgbList.length > 5 && (
             <button 
@@ -368,11 +441,11 @@ export default function Dashboard() {
             <table className="w-full text-left text-[13px] whitespace-nowrap">
               <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
                 <tr>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Nama / NIP</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Golongan</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">SK Terakhir / TMT</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Jadwal KGB Berikutnya</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Hitung Mundur</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Identitas Pegawai</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Pangkat</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">Tanggal Keputusan (TMT)</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Estimasi Pelaksanaan KGB</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Durasi Menuju KGB</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -419,7 +492,7 @@ export default function Dashboard() {
                 {displayedKgb.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
-                      Tidak ada data yang valid untuk kalkulasi KGB.
+                      Belum terdapat data aparatur yang memenuhi kriteria KGB pada periode ini.
                     </td>
                   </tr>
                 )}
@@ -435,9 +508,9 @@ export default function Dashboard() {
           <div>
             <h2 className="text-sm border-l-2 pl-3 border-emerald-500 font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
               <Award className="w-4 h-4 text-emerald-500" />
-              Notifikasi Kenaikan Pangkat (KP)
+              Proyeksi Kenaikan Pangkat (KP) Reguler
             </h2>
-            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar abdi negara dengan jadwal Kenaikan Pangkat terdekat (4 tahun dari SK Terakhir).</p>
+            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar aparatur yang diproyeksikan memenuhi kriteria batas waktu kenaikan pangkat.</p>
           </div>
           {kpList.length > 5 && (
             <button 
@@ -458,11 +531,11 @@ export default function Dashboard() {
             <table className="w-full text-left text-[13px] whitespace-nowrap">
               <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
                 <tr>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Nama / NIP</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Golongan</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">TMT Golongan Ruang</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Jadwal KP Berikutnya</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Hitung Mundur</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Identitas Pegawai</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Pangkat</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">TMT Kepangkatan Terakhir</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Estimasi Pelaksanaan KP</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Durasi Menuju KP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -506,7 +579,91 @@ export default function Dashboard() {
                 {displayedKp.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
-                      Tidak ada data yang valid untuk kalkulasi Kenaikan Pangkat.
+                      Belum terdapat data aparatur yang memenuhi syarat Kenaikan Pangkat (KP) pada periode ini.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Pensiun List */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 px-1">
+            <div>
+              <h2 className="text-sm border-l-2 pl-3 border-amber-500 font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-500" />
+                Proyeksi Purna Tugas (Batas Usia Pensiun)
+              </h2>
+              <p className="text-xs text-slate-500 mt-1 pl-3">Daftar aparatur yang mendekati batas usia pensiun (estimasi 58 tahun berdasarkan tanggal lahir).</p>
+            </div>
+            {pensiunList.length > 5 && (
+              <button 
+                onClick={() => setShowAllPensiun(!showAllPensiun)}
+                className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-full"
+              >
+                {showAllPensiun ? (
+                  <><ChevronUp className="w-4 h-4" /> Tutup Sebagian</>
+                ) : (
+                  <><ChevronDown className="w-4 h-4" /> Lihat Semua ({pensiunList.length})</>
+                )}
+              </button>
+            )}
+          </div>
+          <div className="bg-white border border-slate-100 rounded-lg overflow-x-auto shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+            <table className="w-full text-left text-[13px] whitespace-nowrap">
+              <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
+                <tr>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Identitas Pegawai</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Pangkat</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">Tanggal Lahir</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Estimasi Masa Pensiun</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Durasi Purna Tugas</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {displayedPensiun.map((pensiun) => (
+                  <tr key={`pensiun-${pensiun.id}`} className="hover:bg-slate-50/80 transition-colors group">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                      <div className="font-bold text-slate-800 text-xs sm:text-[13px] truncate">{pensiun.nama}</div>
+                      <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">{pensiun.nip || '-'}</div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
+                      <div className="inline-flex px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold tracking-wider">
+                        {pensiun.status || 'ASN'}
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">{pensiun.golongan}</div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                      <div className="text-slate-700 font-medium whitespace-nowrap">
+                        {new Date(pensiun.tanggalLahir).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                      <div className={cn("font-bold text-[11px] sm:text-[13px] whitespace-nowrap", pensiun.isOverdue ? "text-rose-600" : "text-slate-900")}>
+                        {pensiun.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
+                      <div className={cn(
+                        "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
+                        pensiun.isOverdue 
+                          ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
+                          : pensiun.diffDays <= 365
+                            ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning jika < 1 tahun
+                            : "bg-emerald-50 text-emerald-700 border border-emerald-100/50"
+                      )}>
+                        {pensiun.isOverdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                        {formatRelativeTime(pensiun.diffDays)}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {displayedPensiun.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
+                      Belum terdapat data aparatur yang mendekati batas usia pensiun.
                     </td>
                   </tr>
                 )}
@@ -516,6 +673,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-    </div>
+    </motion.div>
   );
 }

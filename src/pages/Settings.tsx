@@ -5,6 +5,22 @@ import { AppSettings } from '../types';
 import { Save, Loader2, ShieldCheck, Image as ImageIcon, X, Database, User, Printer } from 'lucide-react';
 import { KamusManager } from '../components/KamusManager';
 import { DEFAULT_KAMUS } from '../constants';
+import { motion } from 'motion/react';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+};
 
 export default function Settings() {
   const [settings, setSettings] = useState<AppSettings>({
@@ -91,11 +107,16 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 p-4 sm:p-0 sm:py-8 pb-12 antialiased">
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-100 pb-4 md:pb-6 gap-4">
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="max-w-5xl mx-auto space-y-6 md:space-y-8 p-4 sm:p-0 sm:py-8 pb-12 antialiased"
+    >
+      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-100 pb-4 md:pb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Pengaturan</h1>
-          <p className="mt-1 text-sm text-slate-500">Kelola identitas KOP, pejabat penandatangan, dan kamus sistem.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Pengaturan Sistem</h1>
+          <p className="mt-1 text-sm text-slate-500">Konfigurasi identitas instansi, atribut tata naskah, otoritas penandatangan, dan manajemen kamus data.</p>
         </div>
         <button
           type="button"
@@ -106,7 +127,7 @@ export default function Settings() {
           {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
           Simpan Semua
         </button>
-      </div>
+      </motion.div>
 
       {message && (
         <div className={`p-4 rounded-xl text-sm font-semibold flex items-center gap-3 animate-in fade-in slide-in-from-top-2 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
@@ -129,7 +150,7 @@ export default function Settings() {
               }`}
             >
               <User className={`w-4 h-4 ${activeTab === 'identitas' ? 'text-indigo-600' : 'text-slate-400'}`} />
-              Pejabat Penandatangan
+              Otoritas Penandatangan
             </button>
             <button
               onClick={() => setActiveTab('cetak')}
@@ -140,7 +161,7 @@ export default function Settings() {
               }`}
             >
               <Printer className={`w-4 h-4 ${activeTab === 'cetak' ? 'text-indigo-600' : 'text-slate-400'}`} />
-              Kop & Tata Naskah
+              Tata Naskah & Identitas
             </button>
             <button
               onClick={() => setActiveTab('kamus')}
@@ -151,7 +172,7 @@ export default function Settings() {
               }`}
             >
               <Database className={`w-4 h-4 ${activeTab === 'kamus' ? 'text-indigo-600' : 'text-slate-400'}`} />
-              Kamus Data Jabatan
+              Manajemen Kamus Data
             </button>
           </nav>
         </div>
@@ -164,8 +185,8 @@ export default function Settings() {
             {activeTab === 'identitas' && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="border-b border-slate-100 pb-4">
-                  <h2 className="text-lg font-bold text-slate-800">Pejabat Utama</h2>
-                  <p className="text-sm text-slate-500 mt-1">Digunakan untuk keperluan tanda tangan pada dokumen cetak laporan.</p>
+                  <h2 className="text-lg font-bold text-slate-800">Otoritas Pengesahan Teratas</h2>
+                  <p className="text-sm text-slate-500 mt-1">Delegasi penandatangan untuk validasi dan pengesahan dokumen serta laporan kepegawaian resmi.</p>
                 </div>
 
                 <div className="space-y-6">
@@ -224,8 +245,8 @@ export default function Settings() {
             {activeTab === 'cetak' && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="border-b border-slate-100 pb-4">
-                  <h2 className="text-lg font-bold text-slate-800">Tata Naskah & KOP</h2>
-                  <p className="text-sm text-slate-500 mt-1">Konfigurasi visual untuk kop surat institusi pada pencetakan laporan Excel atau PDF.</p>
+                  <h2 className="text-lg font-bold text-slate-800">Tata Naskah Dinas & Identitas Visual</h2>
+                  <p className="text-sm text-slate-500 mt-1">Konfigurasi atribut tipografi dan elemen visual KOP instansi guna standarisasi dokumen operasional.</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -333,6 +354,6 @@ export default function Settings() {
           </form>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

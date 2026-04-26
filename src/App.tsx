@@ -9,11 +9,13 @@ import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import Settings from './pages/Settings';
 import Print from './pages/Print';
+import Chat from './pages/Chat';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useEffect, useState } from 'react';
 import { auth } from './lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, User } from 'firebase/auth';
 import { LogIn } from 'lucide-react';
+import { Toaster, toast } from 'sonner';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -24,7 +26,30 @@ export default function App() {
       setUser(currentUser);
       setLoading(false);
     });
-    return () => unsubscribe();
+
+    const handleOnline = () => toast.success('Kembali Online', { description: 'Koneksi internet Anda telah pulih.' });
+    const handleOffline = () => toast.error('Koneksi Terputus', { description: 'Anda sedang offline. Beberapa fitur mungkin tidak tersedia.' });
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const handlePwaUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const updateSW = customEvent.detail.updateSW;
+      toast('Pembaruan Tersedia', {
+        description: 'Versi baru aplikasi telah tersedia. Muat ulang untuk memperbarui?',
+        action: { label: 'Muat Ulang', onClick: () => updateSW(true) },
+        duration: Infinity,
+      });
+    };
+    window.addEventListener('pwa-update', handlePwaUpdate);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('pwa-update', handlePwaUpdate);
+    };
   }, []);
 
   const handleLogin = async () => {
@@ -70,6 +95,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <Toaster position="top-right" richColors />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Layout />}>
@@ -77,7 +103,7 @@ export default function App() {
             <Route path="employees" element={<Employees />} />
             <Route path="print" element={<Print />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="chat" element={<div>Halaman Chat (Segera Hadir)</div>} />
+            <Route path="chat" element={<Chat />} />
           </Route>
         </Routes>
       </BrowserRouter>

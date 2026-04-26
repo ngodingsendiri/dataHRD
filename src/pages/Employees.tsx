@@ -8,8 +8,24 @@ import { Plus, Search, Edit2, Trash2, Download, Upload, FileSpreadsheet, Sparkle
 import * as XLSX from 'xlsx';
 import { handleFirestoreError, OperationType } from '../lib/error';
 import { extractEmployeeData, extractEmployeeDataFromText, mapExcelColumnsWithAI } from '../services/geminiService';
+import { motion } from 'motion/react';
 
 import { DEFAULT_KAMUS } from '../constants';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
 
 export default function Employees() {
   const [rawEmployees, setRawEmployees] = useState<Employee[]>([]);
@@ -757,27 +773,32 @@ export default function Employees() {
   };
 
   return (
-    <div className="space-y-6 md:space-y-10 max-w-[1400px] mx-auto p-4 sm:p-0 pb-12 antialiased">
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-5 md:space-y-10 max-w-[1400px] mx-auto p-4 sm:p-0 pb-12 antialiased"
+    >
       {/* Page Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 border-b border-slate-100 pb-4 md:pb-8">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Database Pegawai</h1>
-          <p className="text-[13px] text-slate-500 mt-1">Kelola data induk pegawai, jabatan, dan unit kerja secara terpusat.</p>
+      <motion.div variants={itemVariants} className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 border-b border-slate-100 pb-5 md:pb-8">
+        <div className="w-full lg:w-auto">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">Direktori Pegawai</h1>
+          <p className="text-[13px] text-slate-500 mt-1">Kelola informasi induk pegawai, penempatan, dan rekam jejak karir secara terpusat.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto mt-2 lg:mt-0">
            <button 
               onClick={handleDownloadTemplate}
-              className="group inline-flex items-center px-4 py-2 text-[12px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+              className="w-full sm:w-auto justify-center group inline-flex items-center px-4 py-2.5 text-[12px] font-bold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all shadow-sm active:scale-95"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 mr-2 text-emerald-600" />
             Template
           </button>
 
-          <div className="flex bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+          <div className="flex bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden w-full sm:w-auto">
             {selectedIds.size > 0 && (
               <button
                 onClick={() => setIsBulkDeleteModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-white bg-red-600 hover:bg-red-700 transition-colors border-r border-red-700"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2.5 text-[12px] font-bold text-white bg-red-600 hover:bg-red-700 transition-colors border-r border-red-700"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Hapus {selectedIds.size}</span>
@@ -785,38 +806,38 @@ export default function Employees() {
             )}
             <button 
               onClick={() => { setEditingEmployee(undefined); setIsModalOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-2.5 text-[12px] font-bold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Tambah</span>
+              <span>Tambah Data</span>
             </button>
-            <label className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50 border-r border-slate-100 transition-colors cursor-pointer order-first">
+            <label className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 text-[12px] font-bold text-slate-700 hover:bg-slate-50 border-r border-slate-100 transition-colors cursor-pointer order-first">
               <Upload className="w-3.5 h-3.5" />
-              <span>Impor</span>
+              <span>Impor Excel</span>
               <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImport} />
             </label>
             <button 
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 text-[12px] font-bold text-slate-700 hover:bg-slate-50 transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Ekspor</span>
+              <span>Ekspor Data</span>
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="space-y-6">
+      <motion.div variants={itemVariants} className="space-y-4 md:space-y-6">
         {/* Search Row */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96 group">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
+          <div className="relative w-full sm:flex-1 md:w-96 group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
             </div>
             <input
               type="text"
               className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
-              placeholder="Cari nama, NIP, atau NIK..."
+              placeholder="Pencarian berdasarkan NIP, Nama, atau NIK..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -933,8 +954,8 @@ export default function Employees() {
                       <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-4 ring-4 ring-white shadow-sm border border-slate-100">
                         <Search className="w-6 h-6 text-slate-400" />
                       </div>
-                      <h3 className="text-sm font-semibold text-slate-900">Tidak ada data ditemukan</h3>
-                      <p className="text-xs text-slate-500 mt-1 max-w-sm">Coba sesuaikan kata kunci pencarian Anda atau tambahkan data pegawai baru.</p>
+                      <h3 className="text-sm font-semibold text-slate-900">Data belum tersedia</h3>
+                      <p className="text-xs text-slate-500 mt-1 max-w-sm">Coba sesuaikan kata kunci pencarian atau tambahkan data kepegawaian baru.</p>
                     </div>
                   </td>
                 </tr>
@@ -944,10 +965,10 @@ export default function Employees() {
         </div>
 
         {/* Mobile Card View */}
-        <div className="lg:hidden flex-1 overflow-y-auto bg-slate-50/50 p-4 space-y-4">
+        <div className="lg:hidden flex-1 overflow-y-auto bg-slate-50/50 p-2 sm:p-4 space-y-3 sm:space-y-4">
           {filteredEmployees.slice(0, rowsPerPage).map((emp) => (
             <div key={emp.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
+              <div className="p-3 sm:p-4 border-b border-slate-100">
                 <div className="flex justify-between items-start gap-3">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 leading-tight">{emp.nama || '-'}</h3>
@@ -963,7 +984,7 @@ export default function Employees() {
                   </span>
                 </div>
               </div>
-              <div className="p-4 grid grid-cols-2 gap-y-4 gap-x-2 bg-slate-50/30">
+              <div className="p-3 sm:p-4 grid grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-2 bg-slate-50/30">
                 <div>
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Jabatan</div>
                   <div className="text-xs font-semibold text-slate-700">{emp.jabatan || '-'}</div>
@@ -981,7 +1002,7 @@ export default function Employees() {
                   <div className="text-xs text-slate-600 font-medium">{emp.nomorHp || '-'}</div>
                 </div>
               </div>
-              <div className="p-3 border-t border-slate-100 bg-white flex items-center justify-end gap-2">
+              <div className="p-2 sm:p-3 border-t border-slate-100 bg-white flex items-center justify-end gap-2">
                 <button 
                   onClick={() => { setEditingEmployee(emp); setIsModalOpen(true); }}
                   className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
@@ -1010,6 +1031,7 @@ export default function Employees() {
           )}
         </div>
       </div>
+      </motion.div>
 
       <Modal 
         isOpen={isModalOpen} 
@@ -1127,7 +1149,6 @@ export default function Employees() {
           </div>
         </div>
       )}
-    </div>
-  </div>
-);
+    </motion.div>
+  );
 }
