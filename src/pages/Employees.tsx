@@ -757,9 +757,9 @@ export default function Employees() {
   };
 
   return (
-    <div className="space-y-10 max-w-[1400px] mx-auto pb-12 antialiased">
+    <div className="space-y-6 md:space-y-10 max-w-[1400px] mx-auto p-4 sm:p-0 pb-12 antialiased">
       {/* Page Header */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 border-b border-slate-100 pb-8">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 border-b border-slate-100 pb-4 md:pb-8">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900">Database Pegawai</h1>
           <p className="text-[13px] text-slate-500 mt-1">Kelola data induk pegawai, jabatan, dan unit kerja secara terpusat.</p>

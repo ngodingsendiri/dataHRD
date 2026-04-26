@@ -91,8 +91,8 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-12 antialiased">
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-100 pb-6 gap-4">
+    <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 p-4 sm:p-0 sm:py-8 pb-12 antialiased">
+      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-100 pb-4 md:pb-6 gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Pengaturan</h1>
           <p className="mt-1 text-sm text-slate-500">Kelola identitas KOP, pejabat penandatangan, dan kamus sistem.</p>
@@ -158,7 +158,7 @@ export default function Settings() {
 
         {/* Content Area */}
         <div className="flex-1 bg-white rounded-2xl border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] min-h-[500px]">
-          <form onSubmit={handleSave} className="p-6 md:p-8">
+          <form onSubmit={handleSave} className="p-4 sm:p-6 md:p-8">
             
             {/* TAB IDENTITAS */}
             {activeTab === 'identitas' && (
@@ -170,11 +170,11 @@ export default function Settings() {
 
                 <div className="space-y-6">
                   {/* Sekda Section */}
-                  <div className="p-5 rounded-xl border border-slate-100 bg-slate-50/50 space-y-5">
+                  <div className="p-4 sm:p-5 rounded-xl border border-slate-100 bg-slate-50/50 space-y-5">
                     <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                        <ShieldCheck className="w-3.5 h-3.5" /> Sekretaris Daerah
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div className="space-y-2">
                         <label className="block text-xs font-semibold text-slate-700">Nama Lengkap</label>
                         <input
@@ -199,11 +199,11 @@ export default function Settings() {
                   </div>
 
                   {/* Bupati Section */}
-                  <div className="p-5 rounded-xl border border-slate-100 bg-slate-50/50 space-y-5">
+                  <div className="p-4 sm:p-5 rounded-xl border border-slate-100 bg-slate-50/50 space-y-5">
                     <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                        <ShieldCheck className="w-3.5 h-3.5" /> Kepala Daerah
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div className="space-y-2">
                         <label className="block text-xs font-semibold text-slate-700">Nama Bupati / Pejabat</label>
                         <input

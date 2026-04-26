@@ -75,10 +75,10 @@ export default function Print() {
   const ttdNip = kadisEmp?.nip || '........................................';
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12 antialiased">
+    <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 p-4 sm:p-0 sm:py-8 pb-12 antialiased">
       {/* Control Panel (Hidden on Print) */}
-      <div className="print-hidden space-y-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-100 pb-6">
+      <div className="print-hidden space-y-4 md:space-y-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-100 pb-4 md:pb-6">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">Pusat Cetak Dokumen</h1>
             <p className="mt-1 text-sm text-slate-500">Sesuaikan konteks tabel dan pratinjau sebelum mencetak dokumen absensi atau daftar tanda terima.</p>
@@ -106,7 +106,7 @@ export default function Print() {
           <p>Bila tombol cetak tidak berfungsi di mode pratinjau ini, silakan tekan <strong>Ctrl+P</strong> (Windows) atau <strong>Cmd+P</strong> (Mac) langsung pada keyboard Anda.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-200">
           <div className="space-y-2">
             <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jenis Dokumen</label>
             <select 
@@ -166,15 +166,15 @@ export default function Print() {
       </div>
 
       {/* Preview Section */}
-      <div className="bg-slate-100 p-8 rounded-xl border border-slate-200 overflow-x-auto print:p-0 print:bg-transparent print:border-none print:shadow-none print:-mx-4 print:overflow-visible">
-        <div className="text-center mb-6 text-sm font-bold text-slate-400 tracking-widest uppercase print:hidden">
+      <div className="bg-slate-100 p-4 sm:p-8 rounded-xl border border-slate-200 overflow-x-auto print:p-0 print:bg-transparent print:border-none print:shadow-none print:-mx-4 print:overflow-visible flex flex-col items-center">
+        <div className="text-center mb-6 text-xs sm:text-sm font-bold text-slate-400 tracking-widest uppercase print:hidden w-full">
           — Area Pratinjau Cetak —
         </div>
         
         {/* Actual Print Paper Container */}
         <div 
           ref={printRef}
-          className="bg-white mx-auto shadow-2xl print-container text-[12pt] w-full max-w-[210mm] p-[15mm] print:max-w-full print:w-full print:p-0"
+          className="bg-white shadow-2xl print-container text-[12pt] w-[210mm] max-w-none shrink-0 p-[15mm] print:max-w-full print:w-full print:p-0 mx-auto"
           style={{
             minHeight: '297mm',
             fontFamily: 'Arial, Helvetica, sans-serif'

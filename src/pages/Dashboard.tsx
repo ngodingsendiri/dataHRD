@@ -173,7 +173,14 @@ export default function Dashboard() {
         else if (data.status === 'PPPK') pppk++;
         else if (data.status === 'PPPKPW') pppkpw++;
 
-        const bidang = data.bidang || 'Lainnya';
+        let bidang = data.bidang || 'Lainnya';
+        const bidangLower = bidang.toLowerCase();
+        if (bidangLower.includes('sekretariat')) bidang = 'Sekretariat';
+        else if (bidangLower.includes('infrastruktur')) bidang = 'Infrastruktur';
+        else if (bidangLower.includes('aspirasi')) bidang = 'Aspirasi';
+        else if (bidangLower.includes('smart') || bidangLower.includes('city')) bidang = 'Smartcity';
+        else if (bidangLower.includes('media')) bidang = 'Media';
+
         bidangMap[bidang] = (bidangMap[bidang] || 0) + 1;
       });
 
@@ -220,9 +227,9 @@ export default function Dashboard() {
   const displayedKp = showAllKp ? kpList : kpList.slice(0, 5);
 
   return (
-    <div className="space-y-10 max-w-[1200px] mx-auto pb-12">
+    <div className="space-y-4 md:space-y-10 max-w-[1200px] mx-auto p-2 sm:p-0 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4 md:pb-8">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900">Dashboard Kepegawaian</h1>
           <p className="text-sm text-slate-500 mt-1">Ringkasan data pegawai dan distribusi unit kerja secara real-time.</p>
@@ -235,10 +242,10 @@ export default function Dashboard() {
       </div>
 
       {/* Basic Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
         {statCards.map((item) => (
-          <div key={item.name} className="bg-white border border-slate-100 p-6 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-slate-300 transition-colors">
-            <div className="flex items-center gap-3 mb-3 text-slate-400">
+          <div key={item.name} className="bg-white border border-slate-100 p-3 sm:p-6 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-slate-300 transition-colors">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3 text-slate-400">
               <item.icon className="w-4 h-4" />
               <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{item.name}</span>
             </div>
@@ -250,7 +257,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-start">
         
         {/* Bidang Distribution Table-like List */}
         <div className="lg:col-span-2 space-y-4">
@@ -258,18 +265,18 @@ export default function Dashboard() {
             <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Distribusi Pegawai Per Bidang</h2>
           </div>
           <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.03)] text-[13px]">
-            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-500 uppercase text-[10px] tracking-wider">
-              <div className="col-span-1">No</div>
-              <div className="col-span-8">Nama Bidang / Unit Kerja</div>
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-500 uppercase text-[9px] sm:text-[10px] tracking-wider">
+              <div className="col-span-1 hidden sm:block">No</div>
+              <div className="col-span-9 sm:col-span-8">Nama Bidang / Unit Kerja</div>
               <div className="col-span-3 text-right">Jumlah Staf</div>
             </div>
             <div className="divide-y divide-slate-50">
               {bidangStats.map((bidang, index) => (
-                <div key={bidang.name} className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-slate-50/50 transition-colors group items-center">
-                  <div className="col-span-1 text-slate-300 font-mono text-[11px]">
+                <div key={bidang.name} className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-4 hover:bg-slate-50/50 transition-colors group items-center">
+                  <div className="col-span-1 text-slate-300 font-mono text-[10px] sm:text-[11px] hidden sm:block">
                     {String(index + 1).padStart(2, '0')}
                   </div>
-                  <div className="col-span-8 font-medium text-slate-700 group-hover:text-slate-900 truncate">
+                  <div className="col-span-9 sm:col-span-8 font-medium text-slate-700 group-hover:text-slate-900 truncate">
                     {bidang.name}
                   </div>
                   <div className="col-span-3 text-right font-bold text-slate-900 tabular-nums text-sm">
@@ -278,7 +285,7 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-            <div className="px-6 py-4 bg-slate-50/50 flex justify-between items-center text-[11px] text-slate-400 font-medium">
+            <div className="px-3 sm:px-6 py-2.5 sm:py-4 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center text-[10px] sm:text-[11px] text-slate-400 font-medium gap-1 sm:gap-0">
               <span>Menampilkan {bidangStats.length} Unit Kerja</span>
               <span>Terakhir diperbarui hari ini</span>
             </div>
@@ -288,8 +295,8 @@ export default function Dashboard() {
         {/* Chart Section */}
         <div className="space-y-4">
           <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Visualisasi Persentase</h2>
-          <div className="bg-white border border-slate-100 rounded-lg p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-            <div className="h-[260px] w-full">
+          <div className="bg-white border border-slate-100 rounded-lg p-3 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+            <div className="h-[220px] sm:h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -333,8 +340,8 @@ export default function Dashboard() {
       </div>
 
       {/* KGB Countdown Section */}
-      <div className="space-y-4 pt-6 mt-6 border-t border-slate-100">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="space-y-4 pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm border-l-2 pl-3 border-sky-500 font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-sky-500" />
@@ -359,44 +366,44 @@ export default function Dashboard() {
         <div className="bg-white border border-slate-100 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[13px] whitespace-nowrap">
-              <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] tracking-widest font-bold text-slate-500">
+              <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
                 <tr>
-                  <th className="px-6 py-4">Nama / NIP</th>
-                  <th className="px-6 py-4">Status & Golongan</th>
-                  <th className="px-6 py-4 text-center">SK Terakhir / TMT</th>
-                  <th className="px-6 py-4 text-center">Jadwal KGB Berikutnya</th>
-                  <th className="px-6 py-4 text-right">Hitung Mundur</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Nama / NIP</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Golongan</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">SK Terakhir / TMT</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Jadwal KGB Berikutnya</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Hitung Mundur</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {displayedKgb.map((kgb) => (
                   <tr key={kgb.id} className="hover:bg-sky-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-slate-800">{kgb.nama}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">{kgb.nip || '-'}</div>
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
+                      <div className="font-bold text-slate-800 truncate">{kgb.nama}</div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">{kgb.nip || '-'}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
                         {kgb.status}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">{kgb.golongan}</div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">{kgb.golongan}</div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="text-slate-700 font-medium">
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                      <div className="text-slate-700 font-medium whitespace-nowrap">
                         {kgb.baselineDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1">
+                      <div className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1 whitespace-nowrap">
                         {kgb.isFirst ? '(TMT Kerja)' : '(SK Terakhir)'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className={cn("font-bold", kgb.isOverdue ? "text-rose-600" : "text-slate-900")}>
-                        {kgb.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                      <div className={cn("font-bold text-[11px] sm:text-[13px] whitespace-nowrap", kgb.isOverdue ? "text-rose-600" : "text-slate-900")}>
+                        {kgb.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
                       <div className={cn(
-                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold",
+                        "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
                         kgb.isOverdue 
                           ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
                           : kgb.diffDays <= 30
@@ -423,8 +430,8 @@ export default function Dashboard() {
       </div>
 
       {/* Kenaikan Pangkat (KP) Countdown Section */}
-      <div className="space-y-4 pt-6 mt-6 border-t border-slate-100">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="space-y-4 pt-4 sm:pt-6 mt-4 sm:mt-6 border-t border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm border-l-2 pl-3 border-emerald-500 font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
               <Award className="w-4 h-4 text-emerald-500" />
@@ -449,41 +456,41 @@ export default function Dashboard() {
         <div className="bg-white border border-slate-100 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[13px] whitespace-nowrap">
-              <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[10px] tracking-widest font-bold text-slate-500">
+              <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
                 <tr>
-                  <th className="px-6 py-4">Nama / NIP</th>
-                  <th className="px-6 py-4">Status & Golongan</th>
-                  <th className="px-6 py-4 text-center">TMT Golongan Ruang</th>
-                  <th className="px-6 py-4 text-center">Jadwal KP Berikutnya</th>
-                  <th className="px-6 py-4 text-right">Hitung Mundur</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Nama / NIP</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Golongan</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">TMT Golongan Ruang</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Jadwal KP Berikutnya</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Hitung Mundur</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {displayedKp.map((kp) => (
                   <tr key={kp.id} className="hover:bg-emerald-50/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-slate-800">{kp.nama}</div>
-                      <div className="text-xs text-slate-500 mt-0.5">{kp.nip || '-'}</div>
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
+                      <div className="font-bold text-slate-800 truncate">{kp.nama}</div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">{kp.nip || '-'}</div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
                         {kp.status}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">{kp.golongan}</div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">{kp.golongan}</div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="text-slate-700 font-medium">
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                      <div className="text-slate-700 font-medium whitespace-nowrap">
                         {kp.baselineDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className={cn("font-bold", kp.isOverdue ? "text-rose-600" : "text-slate-900")}>
-                        {kp.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                      <div className={cn("font-bold text-[11px] sm:text-[13px] whitespace-nowrap", kp.isOverdue ? "text-rose-600" : "text-slate-900")}>
+                        {kp.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
                       <div className={cn(
-                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold",
+                        "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
                         kp.isOverdue 
                           ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
                           : kp.diffDays <= 90

@@ -128,7 +128,7 @@ export default function Layout() {
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 p-4 md:p-8 lg:p-10 print:block print:overflow-visible print:p-0">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 p-0 sm:p-4 md:p-8 lg:p-10 print:block print:overflow-visible print:p-0">
           <Outlet />
         </main>
 

@@ -268,7 +268,7 @@ export function EmployeeForm({ initialData, settings, onSubmit, onCancel }: Empl
         
         <div className="space-y-4">
           {fields.map((field, index) => (
-            <div key={field.id} className="p-5 border border-slate-200 rounded-2xl bg-slate-50/50 space-y-4">
+            <div key={field.id} className="p-4 sm:p-5 border border-slate-200 rounded-2xl bg-slate-50/50 space-y-4">
               <div className="flex justify-between items-start">
                 <span className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Anggota #{index + 1}</span>
                 <button
