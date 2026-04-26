@@ -15,9 +15,9 @@ export default defineConfig(({mode}) => {
         registerType: 'autoUpdate',
         includeAssets: ['pwa-192x192.svg', 'pwa-512x512.svg'],
         manifest: {
-          name: 'Sistem Informasi Pegawai Desa',
-          short_name: 'PegawaiDesa',
-          description: 'Aplikasi Manajemen Data Pegawai Desa',
+          name: 'HRD Kominfo',
+          short_name: 'HRD Kominfo',
+          description: 'Aplikasi Manajemen Data Pegawai Kominfo',
           theme_color: '#f8fafc',
           background_color: '#f8fafc',
           icons: [
