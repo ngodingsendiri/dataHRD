@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle } from 'lucide-react';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { AlertCircle } from "lucide-react";
 
 interface Props {
   children?: ReactNode;
@@ -15,7 +15,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     super(props);
     (this as any).state = {
       hasError: false,
-      error: null
+      error: null,
     };
   }
 
@@ -24,7 +24,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    console.error("Uncaught error:", error, errorInfo);
   }
 
   public render() {
@@ -36,9 +36,13 @@ export class ErrorBoundary extends React.Component<Props, State> {
       try {
         if (state.error?.message) {
           const parsedError = JSON.parse(state.error.message);
-          if (parsedError.error && parsedError.error.includes('permission-denied')) {
+          if (
+            parsedError.error &&
+            parsedError.error.includes("permission-denied")
+          ) {
             isPermissionError = true;
-            errorMessage = "Anda tidak memiliki izin untuk mengakses data ini. Silakan periksa aturan (rules) Firestore di Firebase Console Anda.";
+            errorMessage =
+              "Anda tidak memiliki izin untuk mengakses data ini. Silakan periksa aturan (rules) Firestore di Firebase Console Anda.";
           } else if (parsedError.error) {
             errorMessage = parsedError.error;
           }
@@ -52,10 +56,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
         <div className="min-h-[400px] flex items-center justify-center p-6">
           <div className="max-w-md w-full bg-red-50 border border-red-200 rounded-lg p-6 flex flex-col items-center text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-            <h2 className="text-lg font-semibold text-red-800 mb-2">Oops! Terjadi Kesalahan</h2>
-            <p className="text-sm text-red-600 mb-4">
-              {errorMessage}
-            </p>
+            <h2 className="text-lg font-semibold text-red-800 mb-2">
+              Oops! Terjadi Kesalahan
+            </h2>
+            <p className="text-sm text-red-600 mb-4">{errorMessage}</p>
             {isPermissionError && (
               <div className="text-xs text-red-500 bg-red-100 p-3 rounded text-left w-full">
                 <p className="font-semibold mb-1">Cara Mengatasi:</p>
@@ -64,7 +68,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
                   <li>Pilih project Anda</li>
                   <li>Buka menu Firestore Database</li>
                   <li>Pilih tab "Rules"</li>
-                  <li>Sesuaikan aturan untuk mengizinkan akses ke koleksi yang dituju.</li>
+                  <li>
+                    Sesuaikan aturan untuk mengizinkan akses ke koleksi yang
+                    dituju.
+                  </li>
                 </ol>
               </div>
             )}

@@ -13,8 +13,8 @@ service cloud.firestore {
 
     // Rules for the employees collection
     match /shared/data/employees/{employeeId} {
-      // Allow any authenticated user to read
-      allow read: if request.auth != null;
+      // Allow PUBLIC access to read so other apps can fetch without auth
+      allow read: if true;
       
       // Only designated admins can create, update, or delete
       allow write: if isAdmin();
@@ -22,7 +22,8 @@ service cloud.firestore {
 
     // Rules for the settings collection
     match /shared/data/settings/{settingId} {
-      allow read: if request.auth != null;
+      // Allow PUBLIC access to read
+      allow read: if true;
       allow write: if isAdmin();
     }
 

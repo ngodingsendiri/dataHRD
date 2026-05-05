@@ -1,12 +1,35 @@
-import { useEffect, useState } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { Users, UserCheck, UserMinus, Briefcase, PieChart as PieChartIcon, Clock, AlertCircle, TrendingUp, ChevronDown, ChevronUp, Award } from 'lucide-react';
-import { handleFirestoreError, OperationType } from '../lib/error';
-import { cn } from '../lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { Employee } from '../types';
-import { motion } from 'motion/react';
+import { useEffect, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../lib/firebase";
+import {
+  Users,
+  UserCheck,
+  UserMinus,
+  Briefcase,
+  PieChart as PieChartIcon,
+  Clock,
+  AlertCircle,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  Award,
+} from "lucide-react";
+import { handleFirestoreError, OperationType } from "../lib/error";
+import { cn } from "../lib/utils";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  PieChart,
+  Pie,
+} from "recharts";
+import { Employee } from "../types";
+import { motion } from "motion/react";
 
 interface KgbInfo {
   id: string;
@@ -47,7 +70,7 @@ interface PensiunInfo {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 15 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
 export default function Dashboard() {
@@ -56,9 +79,11 @@ export default function Dashboard() {
     pns: 0,
     cpns: 0,
     pppk: 0,
-    pppkpw: 0
+    pppkpw: 0,
   });
-  const [bidangStats, setBidangStats] = useState<{ name: string; value: number }[]>([]);
+  const [bidangStats, setBidangStats] = useState<
+    { name: string; value: number }[]
+  >([]);
   const [kgbList, setKgbList] = useState<KgbInfo[]>([]);
   const [showAllKgb, setShowAllKgb] = useState(false);
   const [kpList, setKpList] = useState<KpInfo[]>([]);
@@ -73,7 +98,7 @@ export default function Dashboard() {
 
     const list: KgbInfo[] = [];
 
-    employees.forEach(emp => {
+    employees.forEach((emp) => {
       let baselineDate: Date | null = null;
       let isFirst = false;
 
@@ -90,13 +115,24 @@ export default function Dashboard() {
       if (!baselineDate || isNaN(baselineDate.getTime())) return;
 
       const nextDate = new Date(baselineDate);
-      const status = emp.status || '';
-      const golRaw = (emp.gol || emp.pangkatGolongan || '').toUpperCase().replace(/\s/g, '');
+      const status = emp.status || "";
+      const golRaw = (emp.gol || emp.pangkatGolongan || "")
+        .toUpperCase()
+        .replace(/\s/g, "");
 
       // Rule: PNS Gol II/a first time is 1 year
-      const isPnsIIa = status === 'PNS' && (golRaw.includes('II/A') || golRaw.includes('II.A') || golRaw === 'IIA');
+      const isPnsIIa =
+        status === "PNS" &&
+        (golRaw.includes("II/A") ||
+          golRaw.includes("II.A") ||
+          golRaw === "IIA");
       // Rule: PPPK Gol 5 first time is 1 year
-      const isPppk5 = status === 'PPPK' && (golRaw === 'V' || golRaw === '5' || golRaw.includes('/V') || golRaw.includes('.V'));
+      const isPppk5 =
+        status === "PPPK" &&
+        (golRaw === "V" ||
+          golRaw === "5" ||
+          golRaw.includes("/V") ||
+          golRaw.includes(".V"));
 
       if (isFirst && (isPnsIIa || isPppk5)) {
         nextDate.setFullYear(nextDate.getFullYear() + 1);
@@ -112,12 +148,12 @@ export default function Dashboard() {
         nama: emp.nama,
         nip: emp.nip,
         status: status,
-        golongan: emp.pangkatGolongan || emp.gol || '-',
+        golongan: emp.pangkatGolongan || emp.gol || "-",
         nextDate,
         diffDays,
         isOverdue: diffDays < 0,
         baselineDate,
-        isFirst
+        isFirst,
       });
     });
 
@@ -126,15 +162,17 @@ export default function Dashboard() {
   };
 
   const formatRelativeTime = (diffDays: number) => {
-    if (diffDays === 0) return 'Hari ini';
+    if (diffDays === 0) return "Hari ini";
     if (diffDays < 0) {
       const abs = Math.abs(diffDays);
       if (abs > 365) return `Lewat ${Math.floor(abs / 365)} tahun`;
       if (abs > 30) return `Lewat ${Math.floor(abs / 30)} bulan`;
       return `Lewat ${abs} hari`;
     }
-    if (diffDays > 365) return `Dalam ${Math.floor(diffDays / 365)} tahun, ${Math.floor((diffDays % 365)/30)} bln`;
-    if (diffDays > 30) return `Dalam ${Math.floor(diffDays / 30)} bulan, ${diffDays % 30} hr`;
+    if (diffDays > 365)
+      return `Dalam ${Math.floor(diffDays / 365)} tahun, ${Math.floor((diffDays % 365) / 30)} bln`;
+    if (diffDays > 30)
+      return `Dalam ${Math.floor(diffDays / 30)} bulan, ${diffDays % 30} hr`;
     return `Dalam ${diffDays} hari`;
   };
 
@@ -144,8 +182,8 @@ export default function Dashboard() {
 
     const list: KpInfo[] = [];
 
-    employees.forEach(emp => {
-      // Hanya menghitung bagi yang berstatus PNS atau CPNS pada umumnya, 
+    employees.forEach((emp) => {
+      // Hanya menghitung bagi yang berstatus PNS atau CPNS pada umumnya,
       // tetapi untuk lebih aman kita hitung jika memiliki tmtGolonganRuang.
       if (!emp.tmtGolonganRuang) return;
 
@@ -162,8 +200,8 @@ export default function Dashboard() {
         id: emp.id || emp.nik,
         nama: emp.nama,
         nip: emp.nip,
-        status: (emp.status || ''),
-        golongan: emp.pangkatGolongan || emp.gol || '-',
+        status: emp.status || "",
+        golongan: emp.pangkatGolongan || emp.gol || "-",
         nextDate,
         diffDays,
         isOverdue: diffDays < 0,
@@ -181,7 +219,7 @@ export default function Dashboard() {
 
     const list: PensiunInfo[] = [];
 
-    employees.forEach(emp => {
+    employees.forEach((emp) => {
       if (!emp.tanggalLahir) return;
 
       const baselineDate = new Date(emp.tanggalLahir);
@@ -198,8 +236,8 @@ export default function Dashboard() {
         id: emp.id || emp.nik,
         nama: emp.nama,
         nip: emp.nip,
-        status: (emp.status || ''),
-        golongan: emp.pangkatGolongan || emp.gol || '-',
+        status: emp.status || "",
+        golongan: emp.pangkatGolongan || emp.gol || "-",
         nextDate,
         diffDays,
         isOverdue: diffDays < 0,
@@ -212,58 +250,66 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'shared/data/employees'), (snapshot) => {
-      let pns = 0;
-      let cpns = 0;
-      let pppk = 0;
-      let pppkpw = 0;
-      const bidangMap: Record<string, number> = {};
-      const employeesData: Employee[] = [];
+    const unsubscribe = onSnapshot(
+      collection(db, "shared/data/employees"),
+      (snapshot) => {
+        let pns = 0;
+        let cpns = 0;
+        let pppk = 0;
+        let pppkpw = 0;
+        const bidangMap: Record<string, number> = {};
+        const employeesData: Employee[] = [];
 
-      snapshot.docs.forEach(doc => {
-        const data = doc.data() as Employee;
-        employeesData.push({ ...data, id: doc.id });
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data() as Employee;
+          employeesData.push({ ...data, id: doc.id });
 
-        if (data.status === 'PNS') pns++;
-        else if (data.status === 'CPNS') cpns++;
-        else if (data.status === 'PPPK') pppk++;
-        else if (data.status === 'PPPKPW') pppkpw++;
+          if (data.status === "PNS") pns++;
+          else if (data.status === "CPNS") cpns++;
+          else if (data.status === "PPPK") pppk++;
+          else if (data.status === "PPPKPW") pppkpw++;
 
-        let bidang = data.bidang || 'Lainnya';
-        const bidangLower = bidang.toLowerCase();
-        if (bidangLower.includes('sekretariat')) bidang = 'Sekretariat';
-        else if (bidangLower.includes('infrastruktur')) bidang = 'Infrastruktur';
-        else if (bidangLower.includes('aspirasi')) bidang = 'Aspirasi';
-        else if (bidangLower.includes('smart') || bidangLower.includes('city')) bidang = 'Smartcity';
-        else if (bidangLower.includes('media')) bidang = 'Media';
+          let bidang = data.bidang || "Lainnya";
+          const bidangLower = bidang.toLowerCase();
+          if (bidangLower.includes("sekretariat")) bidang = "Sekretariat";
+          else if (bidangLower.includes("infrastruktur"))
+            bidang = "Infrastruktur";
+          else if (bidangLower.includes("aspirasi")) bidang = "Aspirasi";
+          else if (
+            bidangLower.includes("smart") ||
+            bidangLower.includes("city")
+          )
+            bidang = "Smartcity";
+          else if (bidangLower.includes("media")) bidang = "Media";
 
-        bidangMap[bidang] = (bidangMap[bidang] || 0) + 1;
-      });
+          bidangMap[bidang] = (bidangMap[bidang] || 0) + 1;
+        });
 
-      setStats({
-        total: snapshot.docs.length,
-        pns,
-        cpns,
-        pppk,
-        pppkpw
-      });
+        setStats({
+          total: snapshot.docs.length,
+          pns,
+          cpns,
+          pppk,
+          pppkpw,
+        });
 
-      const bidangData = Object.entries(bidangMap)
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value);
-      setBidangStats(bidangData);
+        const bidangData = Object.entries(bidangMap)
+          .map(([name, value]) => ({ name, value }))
+          .sort((a, b) => b.value - a.value);
+        setBidangStats(bidangData);
 
-      setKgbList(calculateKgbList(employeesData));
-      setKpList(calculateKpList(employeesData));
-      setPensiunList(calculatePensiunList(employeesData));
-
-    }, (err) => {
-      try {
-        handleFirestoreError(err, OperationType.GET, 'shared/data/employees');
-      } catch (e) {
-        if (e instanceof Error) setError(e);
-      }
-    });
+        setKgbList(calculateKgbList(employeesData));
+        setKpList(calculateKpList(employeesData));
+        setPensiunList(calculatePensiunList(employeesData));
+      },
+      (err) => {
+        try {
+          handleFirestoreError(err, OperationType.GET, "shared/data/employees");
+        } catch (e) {
+          if (e instanceof Error) setError(e);
+        }
+      },
+    );
 
     return () => unsubscribe();
   }, []);
@@ -273,54 +319,84 @@ export default function Dashboard() {
   }
 
   const statCards = [
-    { name: 'Total Aparatur', value: stats.total, icon: Users },
-    { name: 'PNS Aktif', value: stats.pns, icon: UserCheck },
-    { name: 'PPPK Aktif', value: stats.pppk, icon: Briefcase },
-    { name: 'Penempatan Unit', value: bidangStats.length, icon: PieChartIcon },
+    { name: "Total Aparatur", value: stats.total, icon: Users },
+    { name: "PNS Aktif", value: stats.pns, icon: UserCheck },
+    { name: "PPPK Aktif", value: stats.pppk, icon: Briefcase },
+    { name: "Penempatan Unit", value: bidangStats.length, icon: PieChartIcon },
   ];
 
-  const COLORS = ['#0f172a', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1', '#e2e8f0'];
+  const COLORS = [
+    "#0f172a",
+    "#334155",
+    "#475569",
+    "#64748b",
+    "#94a3b8",
+    "#cbd5e1",
+    "#e2e8f0",
+  ];
   const displayedKgb = showAllKgb ? kgbList : kgbList.slice(0, 5);
   const displayedKp = showAllKp ? kpList : kpList.slice(0, 5);
-  const displayedPensiun = showAllPensiun ? pensiunList : pensiunList.slice(0, 5);
+  const displayedPensiun = showAllPensiun
+    ? pensiunList
+    : pensiunList.slice(0, 5);
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial="hidden"
       animate="visible"
       variants={containerVariants}
       className="space-y-4 md:space-y-10 max-w-[1200px] mx-auto p-2 sm:p-0 pb-12"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4 md:pb-8">
+      <motion.div
+        variants={itemVariants}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-4 md:pb-8"
+      >
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Dasbor Kepegawaian</h1>
-          <p className="text-sm text-slate-500 mt-1">Ringkasan statistik kepegawaian dan alokasi penempatan secara seketika.</p>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">
+            Dasbor Kepegawaian
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Ringkasan statistik kepegawaian dan alokasi penempatan secara
+            seketika.
+          </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="h-9 px-4 bg-slate-900 text-white rounded text-[12px] font-semibold flex items-center justify-center cursor-default shadow-sm transition-all hover:bg-slate-800">
-            {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+          <div className="h-9 px-4 bg-slate-900 text-white rounded text-[12px] font-semibold flex items-center justify-center cursor-default transition-all hover:bg-slate-800">
+            {new Date().toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
           </div>
         </div>
       </motion.div>
 
       {/* Basic Stats Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+      <motion.div
+        variants={itemVariants}
+        className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6"
+      >
         {statCards.map((item) => (
-          <div key={item.name} className="bg-white border border-slate-100 p-3 sm:p-6 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-slate-300 transition-colors">
+          <div
+            key={item.name}
+            className="bg-white border border-slate-100 p-3 sm:p-6 rounded-lg hover:border-slate-300 transition-colors"
+          >
             <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-3 text-slate-400">
               <item.icon className="w-4 h-4" />
-              <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{item.name}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest leading-none">
+                {item.name}
+              </span>
             </div>
             <div className="text-2xl font-bold text-slate-900 tabular-nums tracking-tight">
               {item.value || 0}
@@ -331,23 +407,29 @@ export default function Dashboard() {
 
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-start">
-        
         {/* Bidang Distribution Table-like List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Distribusi Aparatur per Unit Kerja</h2>
+            <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">
+              Distribusi Aparatur per Unit Kerja
+            </h2>
           </div>
-          <div className="bg-white border border-slate-100 rounded-lg overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.03)] text-[13px]">
+          <div className="bg-white border border-slate-100 rounded-lg overflow-hidden text-[13px]">
             <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-3 bg-slate-50 border-b border-slate-100 font-bold text-slate-500 uppercase text-[9px] sm:text-[10px] tracking-wider">
               <div className="col-span-1 hidden sm:block">No</div>
-              <div className="col-span-9 sm:col-span-8">Nomenklatur Unit Kerja</div>
+              <div className="col-span-9 sm:col-span-8">
+                Nomenklatur Unit Kerja
+              </div>
               <div className="col-span-3 text-right">Alokasi SDM</div>
             </div>
             <div className="divide-y divide-slate-50">
               {bidangStats.map((bidang, index) => (
-                <div key={bidang.name} className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-4 hover:bg-slate-50/50 transition-colors group items-center">
+                <div
+                  key={bidang.name}
+                  className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-4 hover:bg-slate-50/50 transition-colors group items-center"
+                >
                   <div className="col-span-1 text-slate-300 font-mono text-[10px] sm:text-[11px] hidden sm:block">
-                    {String(index + 1).padStart(2, '0')}
+                    {String(index + 1).padStart(2, "0")}
                   </div>
                   <div className="col-span-9 sm:col-span-8 font-medium text-slate-700 group-hover:text-slate-900 truncate">
                     {bidang.name}
@@ -367,8 +449,10 @@ export default function Dashboard() {
 
         {/* Chart Section */}
         <div className="space-y-4">
-          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">Visualisasi Komposisi SDM</h2>
-          <div className="bg-white border border-slate-100 rounded-lg p-3 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em]">
+            Visualisasi Komposisi SDM
+          </h2>
+          <div className="bg-white border border-slate-100 rounded-lg p-3 sm:p-6 ">
             <div className="h-[220px] sm:h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -383,25 +467,44 @@ export default function Dashboard() {
                     stroke="none"
                   >
                     {bidangStats.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '4px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)', fontSize: '12px', color: '#1e293b' }}
-                    itemStyle={{ padding: '0px' }}
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "4px",
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)",
+                      fontSize: "12px",
+                      color: "#1e293b",
+                    }}
+                    itemStyle={{ padding: "0px" }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            
+
             <div className="mt-6 space-y-2 border-t border-slate-50 pt-6">
               {bidangStats.slice(0, 3).map((item, index) => (
-                <div key={item.name} className="flex items-center justify-between text-[11px]">
+                <div
+                  key={item.name}
+                  className="flex items-center justify-between text-[11px]"
+                >
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                    <span className="text-slate-500 font-medium truncate max-w-[150px]">{item.name}</span>
+                    <div
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                    <span className="text-slate-500 font-medium truncate max-w-[150px]">
+                      {item.name}
+                    </span>
                   </div>
-                  <span className="font-bold text-slate-900 tabular-nums">{item.value}</span>
+                  <span className="font-bold text-slate-900 tabular-nums">
+                    {item.value}
+                  </span>
                 </div>
               ))}
               <div className="text-[10px] text-center text-slate-400 italic pt-2">
@@ -420,70 +523,116 @@ export default function Dashboard() {
               <TrendingUp className="w-4 h-4 text-sky-500" />
               Proyeksi Kenaikan Gaji Berkala (KGB)
             </h2>
-            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar aparatur dengan estimasi jadwal KGB berdasarkan riwayat masa kerja.</p>
+            <p className="text-xs text-slate-500 mt-1 pl-3">
+              Daftar aparatur dengan estimasi jadwal KGB berdasarkan riwayat
+              masa kerja.
+            </p>
           </div>
           {kgbList.length > 5 && (
-            <button 
+            <button
               onClick={() => setShowAllKgb(!showAllKgb)}
               className="text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg px-4 py-2 flex items-center justify-center gap-2 transition-colors"
             >
               {showAllKgb ? (
-                <><ChevronUp className="w-4 h-4" /> Tutup Daftar Lengkap</>
+                <>
+                  <ChevronUp className="w-4 h-4" /> Tutup Daftar Lengkap
+                </>
               ) : (
-                <><ChevronDown className="w-4 h-4" /> Lihat Semua ({kgbList.length})</>
+                <>
+                  <ChevronDown className="w-4 h-4" /> Lihat Semua (
+                  {kgbList.length})
+                </>
               )}
             </button>
           )}
         </div>
 
-        <div className="bg-white border border-slate-100 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="bg-white border border-slate-100 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[13px] whitespace-nowrap">
               <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
                 <tr>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Identitas Pegawai</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Pangkat</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">Tanggal Keputusan (TMT)</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Estimasi Pelaksanaan KGB</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Durasi Menuju KGB</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
+                    Identitas Pegawai
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
+                    Status & Pangkat
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                    Tanggal Keputusan (TMT)
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                    Estimasi Pelaksanaan KGB
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
+                    Durasi Menuju KGB
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {displayedKgb.map((kgb) => (
-                  <tr key={kgb.id} className="hover:bg-sky-50/30 transition-colors">
+                  <tr
+                    key={kgb.id}
+                    className="hover:bg-sky-50/30 transition-colors"
+                  >
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
-                      <div className="font-bold text-slate-800 truncate">{kgb.nama}</div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">{kgb.nip || '-'}</div>
+                      <div className="font-bold text-slate-800 truncate">
+                        {kgb.nama}
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                        {kgb.nip || "-"}
+                      </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
                         {kgb.status}
                       </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">{kgb.golongan}</div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                        {kgb.golongan}
+                      </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
                       <div className="text-slate-700 font-medium whitespace-nowrap">
-                        {kgb.baselineDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {kgb.baselineDate.toLocaleDateString("id-ID", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </div>
                       <div className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1 whitespace-nowrap">
-                        {kgb.isFirst ? '(TMT Kerja)' : '(SK Terakhir)'}
+                        {kgb.isFirst ? "(TMT Kerja)" : "(SK Terakhir)"}
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
-                      <div className={cn("font-bold text-[11px] sm:text-[13px] whitespace-nowrap", kgb.isOverdue ? "text-rose-600" : "text-slate-900")}>
-                        {kgb.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      <div
+                        className={cn(
+                          "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
+                          kgb.isOverdue ? "text-rose-600" : "text-slate-900",
+                        )}
+                      >
+                        {kgb.nextDate.toLocaleDateString("id-ID", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
-                      <div className={cn(
-                        "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
-                        kgb.isOverdue 
-                          ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
-                          : kgb.diffDays <= 30
-                            ? "bg-amber-50 text-amber-700 border border-amber-100/50"
-                            : "bg-emerald-50 text-emerald-700 border border-emerald-100/50"
-                      )}>
-                        {kgb.isOverdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
+                          kgb.isOverdue
+                            ? "bg-rose-50 text-rose-700 border border-rose-100/50"
+                            : kgb.diffDays <= 30
+                              ? "bg-amber-50 text-amber-700 border border-amber-100/50"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
+                        )}
+                      >
+                        {kgb.isOverdue ? (
+                          <AlertCircle className="w-3.5 h-3.5" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5" />
+                        )}
                         {formatRelativeTime(kgb.diffDays)}
                       </div>
                     </td>
@@ -491,8 +640,12 @@ export default function Dashboard() {
                 ))}
                 {displayedKgb.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
-                      Belum terdapat data aparatur yang memenuhi kriteria KGB pada periode ini.
+                    <td
+                      colSpan={5}
+                      className="px-6 py-8 text-center text-slate-400 text-sm"
+                    >
+                      Belum terdapat data aparatur yang memenuhi kriteria KGB
+                      pada periode ini.
                     </td>
                   </tr>
                 )}
@@ -510,67 +663,113 @@ export default function Dashboard() {
               <Award className="w-4 h-4 text-emerald-500" />
               Proyeksi Kenaikan Pangkat (KP) Reguler
             </h2>
-            <p className="text-xs text-slate-500 mt-1 pl-3">Daftar aparatur yang diproyeksikan memenuhi kriteria batas waktu kenaikan pangkat.</p>
+            <p className="text-xs text-slate-500 mt-1 pl-3">
+              Daftar aparatur yang diproyeksikan memenuhi kriteria batas waktu
+              kenaikan pangkat.
+            </p>
           </div>
           {kpList.length > 5 && (
-            <button 
+            <button
               onClick={() => setShowAllKp(!showAllKp)}
               className="text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg px-4 py-2 flex items-center justify-center gap-2 transition-colors"
             >
               {showAllKp ? (
-                <><ChevronUp className="w-4 h-4" /> Tutup Daftar Lengkap</>
+                <>
+                  <ChevronUp className="w-4 h-4" /> Tutup Daftar Lengkap
+                </>
               ) : (
-                <><ChevronDown className="w-4 h-4" /> Lihat Semua ({kpList.length})</>
+                <>
+                  <ChevronDown className="w-4 h-4" /> Lihat Semua (
+                  {kpList.length})
+                </>
               )}
             </button>
           )}
         </div>
 
-        <div className="bg-white border border-slate-100 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="bg-white border border-slate-100 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[13px] whitespace-nowrap">
               <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
                 <tr>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Identitas Pegawai</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Pangkat</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">TMT Kepangkatan Terakhir</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Estimasi Pelaksanaan KP</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Durasi Menuju KP</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
+                    Identitas Pegawai
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
+                    Status & Pangkat
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                    TMT Kepangkatan Terakhir
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                    Estimasi Pelaksanaan KP
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
+                    Durasi Menuju KP
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {displayedKp.map((kp) => (
-                  <tr key={kp.id} className="hover:bg-emerald-50/30 transition-colors">
+                  <tr
+                    key={kp.id}
+                    className="hover:bg-emerald-50/30 transition-colors"
+                  >
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
-                      <div className="font-bold text-slate-800 truncate">{kp.nama}</div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">{kp.nip || '-'}</div>
+                      <div className="font-bold text-slate-800 truncate">
+                        {kp.nama}
+                      </div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                        {kp.nip || "-"}
+                      </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
                       <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
                         {kp.status}
                       </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">{kp.golongan}</div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                        {kp.golongan}
+                      </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
                       <div className="text-slate-700 font-medium whitespace-nowrap">
-                        {kp.baselineDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {kp.baselineDate.toLocaleDateString("id-ID", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
-                      <div className={cn("font-bold text-[11px] sm:text-[13px] whitespace-nowrap", kp.isOverdue ? "text-rose-600" : "text-slate-900")}>
-                        {kp.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      <div
+                        className={cn(
+                          "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
+                          kp.isOverdue ? "text-rose-600" : "text-slate-900",
+                        )}
+                      >
+                        {kp.nextDate.toLocaleDateString("id-ID", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
-                      <div className={cn(
-                        "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
-                        kp.isOverdue 
-                          ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
-                          : kp.diffDays <= 90
-                            ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning kalau sisa < 3 bln
-                            : "bg-emerald-50 text-emerald-700 border border-emerald-100/50"
-                      )}>
-                        {kp.isOverdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
+                          kp.isOverdue
+                            ? "bg-rose-50 text-rose-700 border border-rose-100/50"
+                            : kp.diffDays <= 90
+                              ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning kalau sisa < 3 bln
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
+                        )}
+                      >
+                        {kp.isOverdue ? (
+                          <AlertCircle className="w-3.5 h-3.5" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5" />
+                        )}
                         {formatRelativeTime(kp.diffDays)}
                       </div>
                     </td>
@@ -578,8 +777,12 @@ export default function Dashboard() {
                 ))}
                 {displayedKp.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
-                      Belum terdapat data aparatur yang memenuhi syarat Kenaikan Pangkat (KP) pada periode ini.
+                    <td
+                      colSpan={5}
+                      className="px-6 py-8 text-center text-slate-400 text-sm"
+                    >
+                      Belum terdapat data aparatur yang memenuhi syarat Kenaikan
+                      Pangkat (KP) pada periode ini.
                     </td>
                   </tr>
                 )}
@@ -596,65 +799,112 @@ export default function Dashboard() {
                 <Clock className="w-4 h-4 text-amber-500" />
                 Proyeksi Purna Tugas (Batas Usia Pensiun)
               </h2>
-              <p className="text-xs text-slate-500 mt-1 pl-3">Daftar aparatur yang mendekati batas usia pensiun (estimasi 58 tahun berdasarkan tanggal lahir).</p>
+              <p className="text-xs text-slate-500 mt-1 pl-3">
+                Daftar aparatur yang mendekati batas usia pensiun (estimasi 58
+                tahun berdasarkan tanggal lahir).
+              </p>
             </div>
             {pensiunList.length > 5 && (
-              <button 
+              <button
                 onClick={() => setShowAllPensiun(!showAllPensiun)}
                 className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-full"
               >
                 {showAllPensiun ? (
-                  <><ChevronUp className="w-4 h-4" /> Tutup Sebagian</>
+                  <>
+                    <ChevronUp className="w-4 h-4" /> Tutup Sebagian
+                  </>
                 ) : (
-                  <><ChevronDown className="w-4 h-4" /> Lihat Semua ({pensiunList.length})</>
+                  <>
+                    <ChevronDown className="w-4 h-4" /> Lihat Semua (
+                    {pensiunList.length})
+                  </>
                 )}
               </button>
             )}
           </div>
-          <div className="bg-white border border-slate-100 rounded-lg overflow-x-auto shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+          <div className="bg-white border border-slate-100 rounded-lg overflow-x-auto ">
             <table className="w-full text-left text-[13px] whitespace-nowrap">
               <thead className="bg-slate-50/50 border-b border-slate-100 uppercase text-[9px] sm:text-[10px] tracking-widest font-bold text-slate-500">
                 <tr>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">Identitas Pegawai</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">Status & Pangkat</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">Tanggal Lahir</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">Estimasi Masa Pensiun</th>
-                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">Durasi Purna Tugas</th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
+                    Identitas Pegawai
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
+                    Status & Pangkat
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                    Tanggal Lahir
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                    Estimasi Masa Pensiun
+                  </th>
+                  <th className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
+                    Durasi Purna Tugas
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {displayedPensiun.map((pensiun) => (
-                  <tr key={`pensiun-${pensiun.id}`} className="hover:bg-slate-50/80 transition-colors group">
+                  <tr
+                    key={`pensiun-${pensiun.id}`}
+                    className="hover:bg-slate-50/80 transition-colors group"
+                  >
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <div className="font-bold text-slate-800 text-xs sm:text-[13px] truncate">{pensiun.nama}</div>
-                      <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">{pensiun.nip || '-'}</div>
+                      <div className="font-bold text-slate-800 text-xs sm:text-[13px] truncate">
+                        {pensiun.nama}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">
+                        {pensiun.nip || "-"}
+                      </div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
                       <div className="inline-flex px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold tracking-wider">
-                        {pensiun.status || 'ASN'}
+                        {pensiun.status || "ASN"}
                       </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">{pensiun.golongan}</div>
+                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                        {pensiun.golongan}
+                      </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
                       <div className="text-slate-700 font-medium whitespace-nowrap">
-                        {new Date(pensiun.tanggalLahir).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {new Date(pensiun.tanggalLahir).toLocaleDateString(
+                          "id-ID",
+                          { year: "numeric", month: "short", day: "numeric" },
+                        )}
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
-                      <div className={cn("font-bold text-[11px] sm:text-[13px] whitespace-nowrap", pensiun.isOverdue ? "text-rose-600" : "text-slate-900")}>
-                        {pensiun.nextDate.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      <div
+                        className={cn(
+                          "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
+                          pensiun.isOverdue
+                            ? "text-rose-600"
+                            : "text-slate-900",
+                        )}
+                      >
+                        {pensiun.nextDate.toLocaleDateString("id-ID", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
-                      <div className={cn(
-                        "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
-                        pensiun.isOverdue 
-                          ? "bg-rose-50 text-rose-700 border border-rose-100/50" 
-                          : pensiun.diffDays <= 365
-                            ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning jika < 1 tahun
-                            : "bg-emerald-50 text-emerald-700 border border-emerald-100/50"
-                      )}>
-                        {pensiun.isOverdue ? <AlertCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                      <div
+                        className={cn(
+                          "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
+                          pensiun.isOverdue
+                            ? "bg-rose-50 text-rose-700 border border-rose-100/50"
+                            : pensiun.diffDays <= 365
+                              ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning jika < 1 tahun
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
+                        )}
+                      >
+                        {pensiun.isOverdue ? (
+                          <AlertCircle className="w-3.5 h-3.5" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5" />
+                        )}
                         {formatRelativeTime(pensiun.diffDays)}
                       </div>
                     </td>
@@ -662,8 +912,12 @@ export default function Dashboard() {
                 ))}
                 {displayedPensiun.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-400 text-sm">
-                      Belum terdapat data aparatur yang mendekati batas usia pensiun.
+                    <td
+                      colSpan={5}
+                      className="px-6 py-8 text-center text-slate-400 text-sm"
+                    >
+                      Belum terdapat data aparatur yang mendekati batas usia
+                      pensiun.
                     </td>
                   </tr>
                 )}
@@ -672,7 +926,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
     </motion.div>
   );
 }

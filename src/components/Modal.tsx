@@ -1,6 +1,6 @@
-import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
-import { ReactNode } from 'react';
+import * as Dialog from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
+import { ReactNode } from "react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-all duration-300 data-[state=open]:opacity-100 data-[state=closed]:opacity-0" />
-        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-3xl translate-x-[-50%] translate-y-[-50%] gap-4 border border-slate-200 bg-white p-4 sm:p-6 shadow-2xl transition-all duration-300 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:scale-100 data-[state=closed]:scale-95 sm:rounded-2xl max-h-[100dvh] sm:max-h-[90vh] rounded-none overflow-y-auto">
+        <Dialog.Content className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-3xl translate-x-[-50%] translate-y-[-50%] gap-4 border border-slate-200 bg-white p-4 sm:p-6 shadow-md transition-all duration-300 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:scale-100 data-[state=closed]:scale-95 sm:rounded-xl max-h-[100dvh] sm:max-h-[90vh] rounded-none overflow-y-auto">
           <div className="flex flex-col space-y-1.5 text-center sm:text-left">
             <Dialog.Title className="text-lg font-semibold leading-none tracking-tight">
               {title}

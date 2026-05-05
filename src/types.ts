@@ -1,6 +1,6 @@
 export interface FamilyMember {
   name: string;
-  relation: 'Istri' | 'Suami' | 'Anak';
+  relation: "Istri" | "Suami" | "Anak";
   birthDate?: string;
   marriageDate?: string;
   occupation?: string;
@@ -12,7 +12,7 @@ export interface Employee {
   nik: string;
   nama: string;
   nip: string;
-  jk: 'L' | 'P';
+  jk: "L" | "P";
   tempatLahir: string;
   tanggalLahir: string;
   jalanDusun: string;
@@ -35,7 +35,7 @@ export interface Employee {
   besaranGajiKotor: string;
   jabatan: string;
   bidang: string;
-  status: 'PNS' | 'CPNS' | 'PPPK' | 'PPPKPW' | 'Lainnya';
+  status: "PNS" | "CPNS" | "PPPK" | "PPPKPW" | "Lainnya";
   nomorKarpeg: string;
   pendidikan: string;
   jurusan: string;
