@@ -31,7 +31,7 @@ export default function Layout() {
   ];
 
   return (
-    <div className="h-screen w-full bg-white flex overflow-hidden font-sans antialiased text-slate-900 print:block print:h-auto print:overflow-visible">
+    <div className="h-screen w-full bg-transparent flex overflow-hidden font-sans antialiased text-slate-900 print:block print:h-auto print:overflow-visible">
       {/* Mobile sidebar backdrop */}
       {isSidebarOpen && (
         <div
@@ -150,7 +150,7 @@ export default function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden print:block print:overflow-visible">
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white border-b border-slate-100 h-14 px-4 flex items-center justify-between shrink-0 sticky top-0 z-30 print:hidden">
+        <header className="lg:hidden bg-white/80 backdrop-blur-md border-b border-slate-100 h-14 px-4 flex items-center justify-between shrink-0 sticky top-0 z-30 print:hidden">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 rounded bg-slate-900 flex items-center justify-center">
               <Users className="w-3.5 h-3.5 text-white" />
@@ -181,7 +181,7 @@ export default function Layout() {
         </main>
 
         {/* BOTTOM NAV (Mobile Only) - Simplified */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 py-2 safe-bottom z-30 flex items-center justify-between print:hidden">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 px-4 py-2 safe-bottom z-30 flex items-center justify-between print:hidden">
           {navigation.slice(0, 4).map((item) => {
             const isActive = location.pathname === item.href;
             return (

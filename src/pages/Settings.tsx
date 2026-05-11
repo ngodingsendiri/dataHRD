@@ -245,7 +245,7 @@ export default function Settings() {
                         </label>
                         <input
                           type="text"
-                          className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                          className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                           value={settings.sekdaNama}
                           onChange={(e) =>
                             setSettings({
@@ -262,7 +262,7 @@ export default function Settings() {
                         </label>
                         <input
                           type="text"
-                          className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all font-mono"
+                          className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all font-mono"
                           value={settings.sekdaNip}
                           onChange={(e) =>
                             setSettings({
@@ -288,7 +288,7 @@ export default function Settings() {
                         </label>
                         <input
                           type="text"
-                          className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                          className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                           value={settings.bupatiNama}
                           onChange={(e) =>
                             setSettings({
@@ -327,7 +327,7 @@ export default function Settings() {
                       </label>
                       <input
                         type="text"
-                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all font-bold text-center"
+                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all font-bold text-center"
                         value={settings.kopLine1 || ""}
                         onChange={(e) =>
                           setSettings({ ...settings, kopLine1: e.target.value })
@@ -341,7 +341,7 @@ export default function Settings() {
                       </label>
                       <input
                         type="text"
-                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all font-bold text-center text-lg"
+                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all font-bold text-center text-lg"
                         value={settings.kopLine2 || ""}
                         onChange={(e) =>
                           setSettings({ ...settings, kopLine2: e.target.value })
@@ -355,7 +355,7 @@ export default function Settings() {
                       </label>
                       <input
                         type="text"
-                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all text-center"
+                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all text-center"
                         value={settings.kopLine3 || ""}
                         onChange={(e) =>
                           setSettings({ ...settings, kopLine3: e.target.value })
@@ -369,7 +369,7 @@ export default function Settings() {
                       </label>
                       <input
                         type="text"
-                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all text-center"
+                        className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all text-center"
                         value={settings.kopLine4 || ""}
                         onChange={(e) =>
                           setSettings({ ...settings, kopLine4: e.target.value })

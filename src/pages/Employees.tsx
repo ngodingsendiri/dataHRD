@@ -39,7 +39,7 @@ import {
   extractEmployeeDataFromText,
   mapExcelColumnsWithAI,
 } from "../services/geminiService";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 import { DEFAULT_KAMUS } from "../constants";
 
@@ -1355,7 +1355,7 @@ export default function Employees() {
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all "
+              className="block w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all "
               placeholder="Pencarian berdasarkan NIP, Nama, atau NIK..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -1505,68 +1505,74 @@ export default function Employees() {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {displayedEmployees.map((emp, index) => (
-                  <tr
-                    key={emp.id}
-                    className="group hover:bg-slate-50 transition-colors duration-150 border-b border-slate-100 last:border-0"
-                  >
-                    <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap text-[10px] font-bold text-slate-400">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/20 cursor-pointer transition-all"
-                          onChange={() => handleSelectOne(emp.id!)}
-                          checked={emp.id ? selectedIds.has(emp.id) : false}
-                        />
-                        <span>{String(index + 1).padStart(2, "0")}</span>
-                      </div>
-                    </td>
-                    <td className="sticky left-[56px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => {
-                            setEditingEmployee(emp);
-                            setIsModalOpen(true);
-                          }}
-                          className="p-1 text-slate-300 hover:text-slate-900 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(emp.id!)}
-                          className="p-1 text-slate-300 hover:text-red-600 transition-colors"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="sticky left-[128px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-[12px] font-bold text-slate-900">
-                          {val(emp.nama)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">
-                      {val(emp.nip)}
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">
-                      {val(emp.nik)}
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500">
-                      {val(emp.jk)}
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-700 font-medium">
-                      {val(emp.jabatan)}
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-900 font-bold">
-                      {val(emp.bidang)}
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-0.5 inline-flex text-[9px] font-bold uppercase tracking-wider rounded border
+                <AnimatePresence mode="popLayout">
+                  {displayedEmployees.map((emp, index) => (
+                    <motion.tr
+                      layout
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      key={emp.id}
+                      className="group hover:bg-slate-50 transition-colors duration-150 border-b border-slate-100 last:border-0"
+                    >
+                      <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap text-[10px] font-bold text-slate-400">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            className="rounded border-slate-300 text-slate-900 focus:ring-slate-900/20 cursor-pointer transition-all"
+                            onChange={() => handleSelectOne(emp.id!)}
+                            checked={emp.id ? selectedIds.has(emp.id) : false}
+                          />
+                          <span>{String(index + 1).padStart(2, "0")}</span>
+                        </div>
+                      </td>
+                      <td className="sticky left-[56px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setEditingEmployee(emp);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-1 text-slate-300 hover:text-slate-900 transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(emp.id!)}
+                            className="p-1 text-slate-300 hover:text-red-600 transition-colors"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="sticky left-[128px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 border-b border-r border-slate-100 whitespace-nowrap">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-[12px] font-bold text-slate-900">
+                            {val(emp.nama)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">
+                        {val(emp.nip)}
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">
+                        {val(emp.nik)}
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500">
+                        {val(emp.jk)}
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-700 font-medium">
+                        {val(emp.jabatan)}
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-900 font-bold">
+                        {val(emp.bidang)}
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-0.5 inline-flex text-[9px] font-bold uppercase tracking-wider rounded border
  ${
    emp.status === "PNS"
      ? "bg-slate-900 text-white border-slate-900"
@@ -1574,18 +1580,19 @@ export default function Employees() {
        ? "bg-white text-slate-900 border-slate-200"
        : "bg-slate-100 text-slate-600 border-slate-200"
  }`}
-                      >
-                        {val(emp.status)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">
-                      {val(emp.pangkatGolongan)}
-                    </td>
-                    <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums tracking-tight">
-                      {val(emp.nomorHp)}
-                    </td>
-                  </tr>
-                ))}
+                        >
+                          {val(emp.status)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums">
+                        {val(emp.pangkatGolongan)}
+                      </td>
+                      <td className="px-4 py-3 border-b border-slate-100 whitespace-nowrap text-[11px] text-slate-500 tabular-nums tracking-tight">
+                        {val(emp.nomorHp)}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
                 {filteredEmployees.length === 0 && (
                   <tr>
                     <td
@@ -1613,23 +1620,29 @@ export default function Employees() {
 
           {/* Mobile Card View */}
           <div className="lg:hidden flex-1 overflow-y-auto bg-slate-50/50 p-2 sm:p-4 space-y-3 sm:space-y-4">
-            {displayedEmployees.map((emp, index) => (
-              <div
-                key={emp.id}
-                className="bg-white rounded-xl border border-slate-200 overflow-hidden"
-              >
-                <div className="p-3 sm:p-4 border-b border-slate-100">
-                  <div className="flex justify-between items-start gap-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 leading-tight">
-                        {emp.nama || "-"}
-                      </h3>
-                      <div className="text-xs text-slate-500 mt-1 font-medium">
-                        {emp.nip ? `NIP: ${emp.nip}` : "NIP: -"}
+            <AnimatePresence mode="popLayout">
+              {displayedEmployees.map((emp, index) => (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  key={emp.id}
+                  className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+                >
+                  <div className="p-3 sm:p-4 border-b border-slate-100">
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900 leading-tight">
+                          {emp.nama || "-"}
+                        </h3>
+                        <div className="text-xs text-slate-500 mt-1 font-medium">
+                          {emp.nip ? `NIP: ${emp.nip}` : "NIP: -"}
+                        </div>
                       </div>
-                    </div>
-                    <span
-                      className={`px-2 py-1 inline-flex text-[10px] font-bold uppercase tracking-wider rounded border shrink-0
+                      <span
+                        className={`px-2 py-1 inline-flex text-[10px] font-bold uppercase tracking-wider rounded border shrink-0
  ${
    emp.status === "PNS"
      ? "bg-emerald-50 text-emerald-700 border-emerald-100"
@@ -1641,66 +1654,67 @@ export default function Employees() {
            ? "bg-violet-50 text-violet-700 border-violet-100"
            : "bg-slate-50 text-slate-700 border-slate-100"
  }`}
+                      >
+                        {emp.status || "-"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3 sm:p-4 grid grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-2 bg-slate-50/30">
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                        Jabatan
+                      </div>
+                      <div className="text-xs font-semibold text-slate-700">
+                        {emp.jabatan || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                        Unit Kerja
+                      </div>
+                      <div className="text-xs font-semibold text-indigo-600">
+                        {emp.bidang || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                        Pangkat/Gol
+                      </div>
+                      <div className="text-xs text-slate-600">
+                        {emp.pangkatGolongan || "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                        No HP
+                      </div>
+                      <div className="text-xs text-slate-600 font-medium">
+                        {emp.nomorHp || "-"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-2 sm:p-3 border-t border-slate-100 bg-white flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingEmployee(emp);
+                        setIsModalOpen(true);
+                      }}
+                      className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
                     >
-                      {emp.status || "-"}
-                    </span>
+                      <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(emp.id!)}
+                      className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                      Hapus
+                    </button>
                   </div>
-                </div>
-                <div className="p-3 sm:p-4 grid grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-2 bg-slate-50/30">
-                  <div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      Jabatan
-                    </div>
-                    <div className="text-xs font-semibold text-slate-700">
-                      {emp.jabatan || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      Unit Kerja
-                    </div>
-                    <div className="text-xs font-semibold text-indigo-600">
-                      {emp.bidang || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      Pangkat/Gol
-                    </div>
-                    <div className="text-xs text-slate-600">
-                      {emp.pangkatGolongan || "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                      No HP
-                    </div>
-                    <div className="text-xs text-slate-600 font-medium">
-                      {emp.nomorHp || "-"}
-                    </div>
-                  </div>
-                </div>
-                <div className="p-2 sm:p-3 border-t border-slate-100 bg-white flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setEditingEmployee(emp);
-                      setIsModalOpen(true);
-                    }}
-                    className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-colors"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 mr-1.5" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(emp.id!)}
-                    className="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                    Hapus
-                  </button>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
             {filteredEmployees.length === 0 && (
               <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
                 <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-3">

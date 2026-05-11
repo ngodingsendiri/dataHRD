@@ -119,14 +119,14 @@ export function EmployeeForm({
             <label className="text-sm font-medium text-slate-700">NIP</label>
             <input
               {...register("nip")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">NIK *</label>
             <input
               {...register("nik", { required: true })}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -135,7 +135,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("nama", { required: true })}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -144,7 +144,7 @@ export function EmployeeForm({
             </label>
             <select
               {...register("jk")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             >
               <option value="L">Laki-laki</option>
               <option value="P">Perempuan</option>
@@ -156,7 +156,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("tempatLahir")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -165,14 +165,14 @@ export function EmployeeForm({
             </label>
             <input
               {...register("tanggalLahir")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Agama</label>
             <input
               {...register("agama")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -181,7 +181,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("statusKawin")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -190,7 +190,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("nomorHp")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
         </div>
@@ -208,7 +208,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("jalanDusun")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -216,14 +216,14 @@ export function EmployeeForm({
               <label className="text-sm font-medium text-slate-700">RT</label>
               <input
                 {...register("rt")}
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">RW</label>
               <input
                 {...register("rw")}
-                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
               />
             </div>
           </div>
@@ -233,7 +233,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("desaKelurahan")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -242,7 +242,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("kecamatan")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -251,7 +251,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("kabupaten")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
         </div>
@@ -269,7 +269,7 @@ export function EmployeeForm({
             </label>
             <select
               {...register("status")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             >
               <option value="PNS">PNS</option>
               <option value="PPPK">PPPK</option>
@@ -283,7 +283,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("jabatan")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -292,7 +292,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("bidang")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -301,7 +301,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("kelasJabatan")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all cursor-not-allowed text-slate-500"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all cursor-not-allowed text-slate-500"
               placeholder="Otomatis dari Kamus"
               readOnly
             />
@@ -312,7 +312,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("bebanKerja")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all cursor-not-allowed text-slate-500"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all cursor-not-allowed text-slate-500"
               placeholder="Otomatis dari Kamus"
               readOnly
             />
@@ -323,7 +323,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("pangkat")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -332,7 +332,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("gol")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -341,7 +341,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("tmtGolonganRuang")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -350,7 +350,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("tmtKerja")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -359,7 +359,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("masaKerja")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -368,7 +368,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("pensiun")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -377,7 +377,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("gajiPokok")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -386,7 +386,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("besaranGajiKotor")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -395,7 +395,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("nomorKarpeg")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
         </div>
@@ -413,7 +413,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("pendidikan")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -422,7 +422,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("jurusan")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -431,7 +431,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("diklatJenjang")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -440,7 +440,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("tahunDiklat")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
         </div>
@@ -458,7 +458,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("sisaCutiN")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -467,7 +467,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("sisaCutiN1")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -476,7 +476,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("sisaCutiN2")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5 md:col-span-2">
@@ -485,7 +485,7 @@ export function EmployeeForm({
             </label>
             <input
               {...register("skTerakhir")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
           <div className="space-y-1.5">
@@ -495,7 +495,7 @@ export function EmployeeForm({
             <input
               type="number"
               {...register("jumlahTertanggung")}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
             />
           </div>
         </div>
@@ -552,7 +552,7 @@ export function EmployeeForm({
                     {...register(`dataKeluarga.${index}.name` as const, {
                       required: true,
                     })}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
@@ -561,7 +561,7 @@ export function EmployeeForm({
                   </label>
                   <select
                     {...register(`dataKeluarga.${index}.relation` as const)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                   >
                     <option value="Istri">Istri</option>
                     <option value="Suami">Suami</option>
@@ -574,7 +574,7 @@ export function EmployeeForm({
                   </label>
                   <input
                     {...register(`dataKeluarga.${index}.birthDate` as const)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
@@ -583,7 +583,7 @@ export function EmployeeForm({
                   </label>
                   <input
                     {...register(`dataKeluarga.${index}.marriageDate` as const)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
@@ -592,7 +592,7 @@ export function EmployeeForm({
                   </label>
                   <input
                     {...register(`dataKeluarga.${index}.occupation` as const)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                   />
                 </div>
                 <div className="space-y-1">
@@ -601,7 +601,7 @@ export function EmployeeForm({
                   </label>
                   <input
                     {...register(`dataKeluarga.${index}.description` as const)}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 transition-all"
                   />
                 </div>
               </div>

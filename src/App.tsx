@@ -21,6 +21,7 @@ import {
 } from "firebase/auth";
 import { LogIn } from "lucide-react";
 import { Toaster, toast } from "sonner";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -76,16 +77,27 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        Memuat...
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-slate-500 font-medium tracking-wider"
+        >
+          Memuat...
+        </motion.div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-xl border border-slate-200 text-center">
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="max-w-md w-full bg-white p-8 rounded-xl border border-slate-200 text-center "
+        >
           <div className="w-16 h-16 bg-slate-900 text-white rounded-xl flex items-center justify-center mx-auto mb-6 ">
             <LogIn className="w-8 h-8" />
           </div>
@@ -98,7 +110,7 @@ export default function App() {
           </p>
           <button
             onClick={handleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 text-slate-700 py-2.5 px-4 rounded-xl hover:bg-slate-50 transition-all font-medium "
+            className="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 text-slate-700 py-2.5 px-4 rounded-xl hover:bg-slate-50 active:scale-[0.98] transition-all font-medium "
           >
             <svg
               className="w-5 h-5 bg-white rounded-full p-0.5"
@@ -123,7 +135,7 @@ export default function App() {
             </svg>
             Login dengan Google
           </button>
-        </div>
+        </motion.div>
       </div>
     );
   }

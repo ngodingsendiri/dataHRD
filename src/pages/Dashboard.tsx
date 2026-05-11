@@ -29,7 +29,7 @@ import {
   Pie,
 } from "recharts";
 import { Employee } from "../types";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface KgbInfo {
   id: string;
@@ -424,7 +424,8 @@ export default function Dashboard() {
             </div>
             <div className="divide-y divide-slate-50">
               {bidangStats.map((bidang, index) => (
-                <div
+                <motion.div
+                  variants={itemVariants}
                   key={bidang.name}
                   className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-6 py-2.5 sm:py-4 hover:bg-slate-50/50 transition-colors group items-center"
                 >
@@ -437,7 +438,7 @@ export default function Dashboard() {
                   <div className="col-span-3 text-right font-bold text-slate-900 tabular-nums text-sm">
                     {bidang.value}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
             <div className="px-3 sm:px-6 py-2.5 sm:py-4 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center text-[10px] sm:text-[11px] text-slate-400 font-medium gap-1 sm:gap-0">
@@ -570,74 +571,81 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {displayedKgb.map((kgb) => (
-                  <tr
-                    key={kgb.id}
-                    className="hover:bg-sky-50/30 transition-colors"
-                  >
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
-                      <div className="font-bold text-slate-800 truncate">
-                        {kgb.nama}
-                      </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
-                        {kgb.nip || "-"}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
-                        {kgb.status}
-                      </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
-                        {kgb.golongan}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
-                      <div className="text-slate-700 font-medium whitespace-nowrap">
-                        {kgb.baselineDate.toLocaleDateString("id-ID", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                      <div className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1 whitespace-nowrap">
-                        {kgb.isFirst ? "(TMT Kerja)" : "(SK Terakhir)"}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
-                      <div
-                        className={cn(
-                          "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
-                          kgb.isOverdue ? "text-rose-600" : "text-slate-900",
-                        )}
-                      >
-                        {kgb.nextDate.toLocaleDateString("id-ID", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
-                      <div
-                        className={cn(
-                          "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
-                          kgb.isOverdue
-                            ? "bg-rose-50 text-rose-700 border border-rose-100/50"
-                            : kgb.diffDays <= 30
-                              ? "bg-amber-50 text-amber-700 border border-amber-100/50"
-                              : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
-                        )}
-                      >
-                        {kgb.isOverdue ? (
-                          <AlertCircle className="w-3.5 h-3.5" />
-                        ) : (
-                          <Clock className="w-3.5 h-3.5" />
-                        )}
-                        {formatRelativeTime(kgb.diffDays)}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                <AnimatePresence>
+                  {displayedKgb.map((kgb) => (
+                    <motion.tr
+                      variants={itemVariants}
+                      layout
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      key={kgb.id}
+                      className="hover:bg-sky-50/30 transition-colors"
+                    >
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
+                        <div className="font-bold text-slate-800 truncate">
+                          {kgb.nama}
+                        </div>
+                        <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                          {kgb.nip || "-"}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
+                          {kgb.status}
+                        </div>
+                        <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                          {kgb.golongan}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                        <div className="text-slate-700 font-medium whitespace-nowrap">
+                          {kgb.baselineDate.toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </div>
+                        <div className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 inline-flex items-center gap-1 whitespace-nowrap">
+                          {kgb.isFirst ? "(TMT Kerja)" : "(SK Terakhir)"}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                        <div
+                          className={cn(
+                            "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
+                            kgb.isOverdue ? "text-rose-600" : "text-slate-900",
+                          )}
+                        >
+                          {kgb.nextDate.toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
+                        <div
+                          className={cn(
+                            "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
+                            kgb.isOverdue
+                              ? "bg-rose-50 text-rose-700 border border-rose-100/50"
+                              : kgb.diffDays <= 30
+                                ? "bg-amber-50 text-amber-700 border border-amber-100/50"
+                                : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
+                          )}
+                        >
+                          {kgb.isOverdue ? (
+                            <AlertCircle className="w-3.5 h-3.5" />
+                          ) : (
+                            <Clock className="w-3.5 h-3.5" />
+                          )}
+                          {formatRelativeTime(kgb.diffDays)}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
                 {displayedKgb.length === 0 && (
                   <tr>
                     <td
@@ -710,71 +718,78 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {displayedKp.map((kp) => (
-                  <tr
-                    key={kp.id}
-                    className="hover:bg-emerald-50/30 transition-colors"
-                  >
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
-                      <div className="font-bold text-slate-800 truncate">
-                        {kp.nama}
-                      </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
-                        {kp.nip || "-"}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
-                        {kp.status}
-                      </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
-                        {kp.golongan}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
-                      <div className="text-slate-700 font-medium whitespace-nowrap">
-                        {kp.baselineDate.toLocaleDateString("id-ID", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
-                      <div
-                        className={cn(
-                          "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
-                          kp.isOverdue ? "text-rose-600" : "text-slate-900",
-                        )}
-                      >
-                        {kp.nextDate.toLocaleDateString("id-ID", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
-                      <div
-                        className={cn(
-                          "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
-                          kp.isOverdue
-                            ? "bg-rose-50 text-rose-700 border border-rose-100/50"
-                            : kp.diffDays <= 90
-                              ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning kalau sisa < 3 bln
-                              : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
-                        )}
-                      >
-                        {kp.isOverdue ? (
-                          <AlertCircle className="w-3.5 h-3.5" />
-                        ) : (
-                          <Clock className="w-3.5 h-3.5" />
-                        )}
-                        {formatRelativeTime(kp.diffDays)}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                <AnimatePresence>
+                  {displayedKp.map((kp) => (
+                    <motion.tr
+                      variants={itemVariants}
+                      layout
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      key={kp.id}
+                      className="hover:bg-emerald-50/30 transition-colors"
+                    >
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 max-w-[150px] sm:max-w-none truncate">
+                        <div className="font-bold text-slate-800 truncate">
+                          {kp.nama}
+                        </div>
+                        <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5 truncate">
+                          {kp.nip || "-"}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 hidden sm:table-cell">
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600">
+                          {kp.status}
+                        </div>
+                        <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                          {kp.golongan}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                        <div className="text-slate-700 font-medium whitespace-nowrap">
+                          {kp.baselineDate.toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                        <div
+                          className={cn(
+                            "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
+                            kp.isOverdue ? "text-rose-600" : "text-slate-900",
+                          )}
+                        >
+                          {kp.nextDate.toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
+                        <div
+                          className={cn(
+                            "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
+                            kp.isOverdue
+                              ? "bg-rose-50 text-rose-700 border border-rose-100/50"
+                              : kp.diffDays <= 90
+                                ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning kalau sisa < 3 bln
+                                : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
+                          )}
+                        >
+                          {kp.isOverdue ? (
+                            <AlertCircle className="w-3.5 h-3.5" />
+                          ) : (
+                            <Clock className="w-3.5 h-3.5" />
+                          )}
+                          {formatRelativeTime(kp.diffDays)}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
                 {displayedKp.length === 0 && (
                   <tr>
                     <td
@@ -844,72 +859,79 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {displayedPensiun.map((pensiun) => (
-                  <tr
-                    key={`pensiun-${pensiun.id}`}
-                    className="hover:bg-slate-50/80 transition-colors group"
-                  >
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <div className="font-bold text-slate-800 text-xs sm:text-[13px] truncate">
-                        {pensiun.nama}
-                      </div>
-                      <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">
-                        {pensiun.nip || "-"}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
-                      <div className="inline-flex px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold tracking-wider">
-                        {pensiun.status || "ASN"}
-                      </div>
-                      <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
-                        {pensiun.golongan}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
-                      <div className="text-slate-700 font-medium whitespace-nowrap">
-                        {new Date(pensiun.tanggalLahir).toLocaleDateString(
-                          "id-ID",
-                          { year: "numeric", month: "short", day: "numeric" },
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
-                      <div
-                        className={cn(
-                          "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
-                          pensiun.isOverdue
-                            ? "text-rose-600"
-                            : "text-slate-900",
-                        )}
-                      >
-                        {pensiun.nextDate.toLocaleDateString("id-ID", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
-                      <div
-                        className={cn(
-                          "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
-                          pensiun.isOverdue
-                            ? "bg-rose-50 text-rose-700 border border-rose-100/50"
-                            : pensiun.diffDays <= 365
-                              ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning jika < 1 tahun
-                              : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
-                        )}
-                      >
-                        {pensiun.isOverdue ? (
-                          <AlertCircle className="w-3.5 h-3.5" />
-                        ) : (
-                          <Clock className="w-3.5 h-3.5" />
-                        )}
-                        {formatRelativeTime(pensiun.diffDays)}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                <AnimatePresence>
+                  {displayedPensiun.map((pensiun) => (
+                    <motion.tr
+                      variants={itemVariants}
+                      layout
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                      key={`pensiun-${pensiun.id}`}
+                      className="hover:bg-slate-50/80 transition-colors group"
+                    >
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <div className="font-bold text-slate-800 text-xs sm:text-[13px] truncate">
+                          {pensiun.nama}
+                        </div>
+                        <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">
+                          {pensiun.nip || "-"}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
+                        <div className="inline-flex px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold tracking-wider">
+                          {pensiun.status || "ASN"}
+                        </div>
+                        <div className="text-[11px] sm:text-xs text-slate-500 mt-1">
+                          {pensiun.golongan}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center hidden md:table-cell">
+                        <div className="text-slate-700 font-medium whitespace-nowrap">
+                          {new Date(pensiun.tanggalLahir).toLocaleDateString(
+                            "id-ID",
+                            { year: "numeric", month: "short", day: "numeric" },
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-center">
+                        <div
+                          className={cn(
+                            "font-bold text-[11px] sm:text-[13px] whitespace-nowrap",
+                            pensiun.isOverdue
+                              ? "text-rose-600"
+                              : "text-slate-900",
+                          )}
+                        >
+                          {pensiun.nextDate.toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2.5 sm:py-4 text-right">
+                        <div
+                          className={cn(
+                            "inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-md text-[10px] sm:text-xs font-bold whitespace-nowrap",
+                            pensiun.isOverdue
+                              ? "bg-rose-50 text-rose-700 border border-rose-100/50"
+                              : pensiun.diffDays <= 365
+                                ? "bg-amber-50 text-amber-700 border border-amber-100/50" // Kuning jika < 1 tahun
+                                : "bg-emerald-50 text-emerald-700 border border-emerald-100/50",
+                          )}
+                        >
+                          {pensiun.isOverdue ? (
+                            <AlertCircle className="w-3.5 h-3.5" />
+                          ) : (
+                            <Clock className="w-3.5 h-3.5" />
+                          )}
+                          {formatRelativeTime(pensiun.diffDays)}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
                 {displayedPensiun.length === 0 && (
                   <tr>
                     <td

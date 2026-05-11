@@ -1496,18 +1496,18 @@ export default function Print() {
               };
 
               return (
-                <div className="text-[12pt] leading-tight text-black p-[20px]">
+                <div className="text-[11pt] leading-tight text-black p-[20px]">
                   <div className="text-right text-[11pt] mb-8 font-bold">
                     Model DK
                   </div>
 
-                  <div className="text-center font-bold text-[14pt] leading-snug mb-8 tracking-widest pb-6">
+                  <div className="text-center font-bold text-[12pt] leading-snug mb-8 tracking-widest pb-6">
                     SURAT KETERANGAN
                     <br />
                     UNTUK MENDAPATKAN PEMBAYARAN TUNJANGAN KELUARGA
                   </div>
 
-                  <table className="w-full text-[12pt] border-none mb-6">
+                  <table className="w-full text-[11pt] border-none mb-6">
                     <tbody>
                       <tr>
                         <td className="w-64 align-top py-0.5">Nama Instansi</td>
@@ -1535,11 +1535,11 @@ export default function Print() {
                     </tbody>
                   </table>
 
-                  <div className="font-bold text-[12pt] mb-2 uppercase">
+                  <div className="font-bold text-[11pt] mb-2 uppercase">
                     DATA PEGAWAI
                   </div>
 
-                  <table className="w-full text-[12pt] border-none mb-4 pl-4 block">
+                  <table className="w-full text-[11pt] border-none mb-4 pl-4 block">
                     <tbody className="w-full display-block">
                       {/* Using indices 1 to 18 as per spec */}
                       <tr>
